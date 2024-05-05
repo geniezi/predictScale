@@ -10,7 +10,6 @@ class Cluster:
         self.waiting_tasks = []
         self.running_tasks = []
         self.task_index = 0
-        # self.pool = Pool(4)  # 进程池数量
 
     def add_node(self, node):
         self.nodes.append(node)
@@ -30,16 +29,7 @@ class Cluster:
         # 单进程
         # 遍历全部节点，并为每个节点创建一个线程来检查任务是否已完成
         for node in self.nodes:
-            self.check_and_free_resources_on_node(node, current_time)
-
-        # # 多进程
-        # processes = [self.pool.apply_async(self.check_and_free_resources_on_node, args=(node, current_time)) for node in
-        #              self.nodes]
-        #
-        # 同步等待所有进程完成
-        # for process in processes:
-        #     process.wait()
-        # self.pool.join()
+            self.check_and_free_resources_on_node( node, current_time)
 
         # 更新等待任务
         if self.task_index < len(self.tasks_queue):
@@ -50,8 +40,10 @@ class Cluster:
         task_list = node.get_completed_tasks(current_time)
         # 遍历task_list，释放资源
         for task in task_list:
-            node.free_resources(task)
+            print(task.task_id)
             self.running_tasks.remove(task)
+            # 单进程
+            node.free_resources(task)
 
     def assign_task(self, task, node, current_time):
         node.assign_task(task, current_time)

@@ -40,7 +40,7 @@ class Node:
         task_list = []
         for task in self.running_tasks:
             # 假设Task类有一个方法来判断任务是否完成
-            task.update_status(current_time)
+            task.update_status(self,current_time)
             if task.get_status() == "completed":
                 task_list.append(task)
         return task_list
