@@ -1,5 +1,6 @@
 from node import Node
 import threading
+from multiprocessing import Process, Pool
 
 
 class Cluster:
@@ -26,10 +27,24 @@ class Cluster:
 
     def time_step(self, current_time):
 
-        threads = []
         # 遍历全部节点，并为每个节点创建一个线程来检查任务是否已完成
         for node in self.nodes:
             self.check_and_free_resources_on_node(node, current_time)
+
+        # processes = []  # 创建一个列表来保存进程
+        # # 创建一个进程池。Pool()参数不填写默认为CPU的核心数。
+        # with Pool() as pool:
+        #     # 遍历所有节点，并为每个节点创建一个进程来检查任务是否已完成
+        #     processes = [pool.apply_async(self.check_and_free_resources_on_node, args=(node, current_time)) for node in
+        #                  self.nodes]
+        #
+        #     # 关闭进程池，不再接受新的进程
+        #     pool.close()
+        #
+        #     # 同步等待所有进程完成
+        #     pool.join()
+
+        # threads = []
         #     t = threading.Thread(target=self.check_and_free_resources_on_node, args=(node, current_time))
         #     threads.append(t)
         #     t.start()  # 启动线程
