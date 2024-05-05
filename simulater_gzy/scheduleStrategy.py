@@ -17,5 +17,3 @@ class FirstFitScheduleStrategy(ScheduleStrategy):
             node = self.cluster.get_first_assignable_node(task)
             if node:
                 self.cluster.assign_task(task, node, current_time)
-            else:
-                print(f"No available node to run Task {task.task_name} (id: {task.task_id})")

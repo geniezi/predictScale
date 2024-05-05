@@ -10,6 +10,7 @@ class Cluster:
         self.waiting_tasks = []
         self.running_tasks = []
         self.task_index = 0
+        # self.pool = Pool(4)  # 进程池数量
 
     def add_node(self, node):
         self.nodes.append(node)
@@ -26,32 +27,19 @@ class Cluster:
             self.task_index += 1
 
     def time_step(self, current_time):
-
+        # 单进程
         # 遍历全部节点，并为每个节点创建一个线程来检查任务是否已完成
         for node in self.nodes:
             self.check_and_free_resources_on_node(node, current_time)
 
-        # processes = []  # 创建一个列表来保存进程
-        # # 创建一个进程池。Pool()参数不填写默认为CPU的核心数。
-        # with Pool() as pool:
-        #     # 遍历所有节点，并为每个节点创建一个进程来检查任务是否已完成
-        #     processes = [pool.apply_async(self.check_and_free_resources_on_node, args=(node, current_time)) for node in
-        #                  self.nodes]
+        # # 多进程
+        # processes = [self.pool.apply_async(self.check_and_free_resources_on_node, args=(node, current_time)) for node in
+        #              self.nodes]
         #
-        #     # 关闭进程池，不再接受新的进程
-        #     pool.close()
-        #
-        #     # 同步等待所有进程完成
-        #     pool.join()
-
-        # threads = []
-        #     t = threading.Thread(target=self.check_and_free_resources_on_node, args=(node, current_time))
-        #     threads.append(t)
-        #     t.start()  # 启动线程
-        #
-        # # 等待所有线程完成
-        # for t in threads:
-        #     t.join()
+        # 同步等待所有进程完成
+        # for process in processes:
+        #     process.wait()
+        # self.pool.join()
 
         # 更新等待任务
         if self.task_index < len(self.tasks_queue):
@@ -75,3 +63,7 @@ class Cluster:
             if node.check_if_assignable(task):
                 return node
         return None
+
+    def shutdown(self):
+        self.pool.close()
+        self.pool.join()

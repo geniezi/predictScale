@@ -1,7 +1,11 @@
 from node import Node
 import csv
 from task import Task
-import util.osUtil as OSUtil
+
+import sys
+sys.path.append("util")
+import osUtil as OSUtil
+# import util.osUtil as OSUtil
 
 # CSV 文件路径
 csv_file = 'data_random/merge_dft.csv'

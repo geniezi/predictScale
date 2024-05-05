@@ -1,3 +1,5 @@
+import time
+
 from cluster import Cluster
 import utils
 from node import Node
@@ -26,11 +28,18 @@ class Simulator:
         print(f"Simulator initialization completed.")
 
     def run(self):
+        start_time = time.time()
         while self.cluster.task_index < len(self.cluster.tasks_queue):
             self.current_time += 1
             print(f"Current time: {self.current_time}")
             self.cluster.time_step(self.current_time)  # 模拟时间流逝
             self.scheduler.schedule(self.current_time)  # 调度任务
+            if self.current_time == 1136804:
+                end_time = time.time()
+                break
+        if self.current_time == 1136804:
+            print(end_time-start_time)
+            return
         while self.cluster.running_tasks.__sizeof__() > 0:
             self.current_time += 1
             print(f"Current time: {self.current_time}")
@@ -43,8 +52,12 @@ class Simulator:
             performance_data.append(task.get_performance_data())
         utils.save_performance_data(performance_data, self.schedulerConfig)
 
+    def shutdown(self):
+        self.cluster.shutdown()
+
 
 if __name__ == '__main__':
     simulator = Simulator()
     simulator.run()
     simulator.save_results()
+    simulator.shutdown()
