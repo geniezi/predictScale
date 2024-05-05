@@ -1,5 +1,6 @@
 from node import Node
 import csv
+import scheduleStrategy
 from task import Task
 
 import sys
@@ -10,6 +11,8 @@ import osUtil as OSUtil
 # CSV 文件路径
 csv_file = 'data_random/merge_dft.csv'
 result_path = 'simulator_gzy/result/'
+
+
 
 
 def init_node_list():

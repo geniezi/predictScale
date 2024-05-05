@@ -2,22 +2,21 @@ import time
 
 from cluster import Cluster
 import utils
+import config
 from node import Node
-import scheduleStrategy
 from task import Task
+import datetime
 
-scheduleStrategyConfig = {
-    "FirstFit": scheduleStrategy.FirstFitScheduleStrategy,
-    # "BestFit": scheduleStrategy.BestFitScheduleStrategy,
-    # "WorstFit": scheduleStrategy.WorstFitScheduleStrategy,
-}
+
+date_to_convert = datetime.datetime(1970, 1, 15)
+end_time = int(time.mktime(date_to_convert.timetuple()))  # 调度任务截止时间
 
 
 class Simulator:
     def __init__(self):
         self.cluster = Cluster()
         self.schedulerConfig = "FirstFit"  # 调度策略
-        self.scheduler = scheduleStrategyConfig[self.schedulerConfig](self.cluster)
+        self.scheduler = config.scheduleStrategyConfig[self.schedulerConfig](self.cluster)
         self.node_list = utils.init_node_list()
         for node in self.node_list:
             self.cluster.add_node(node)
@@ -28,21 +27,15 @@ class Simulator:
         print(f"Simulator initialization completed.")
 
     def run(self):
-        start_time = time.time()
+
         while self.cluster.task_index < len(self.cluster.tasks_queue):
             self.current_time += 1
-            print(f"Current time: {self.current_time}")
+            print(f"Current time: {self.current_time}/{end_time}")
             self.cluster.time_step(self.current_time)  # 模拟时间流逝
             self.scheduler.schedule(self.current_time)  # 调度任务
-            if self.current_time == 1136804:
-                end_time = time.time()
-                break
-        if self.current_time == 1136804:
-            print(end_time-start_time)
-            return
         while self.cluster.running_tasks.__sizeof__() > 0:
             self.current_time += 1
-            print(f"Current time: {self.current_time}")
+            print(f"Current time: {self.current_time}/{end_time}")
             self.cluster.time_step(self.current_time)
 
     def save_results(self):

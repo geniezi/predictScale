@@ -57,5 +57,4 @@ class Cluster:
         return None
 
     def shutdown(self):
-        self.pool.close()
-        self.pool.join()
+        pass

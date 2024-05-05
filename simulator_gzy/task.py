@@ -1,4 +1,5 @@
 from node import Node
+from config import gpuConfig
 
 
 class Task:
@@ -56,12 +57,12 @@ class Task:
     def assign(self, node, current_time):
         self.is_assigned = True
         if self.gpu_type != '':
-            if self.gpu_type == 'T4':
-                self.speedup = 1.5 if node.gpu_type == 'P100' else 2 if node.gpu_type == 'V100' else 1
-            elif self.gpu_type == 'P100':
-                self.speedup = 4 / 3 if node.gpu_type == 'V100' else 2 / 3 if node.gpu_type == 'T4' else 1
-            elif self.gpu_type == 'V100':
-                self.speedup = 3 / 4 if node.gpu_type == 'P100' else 0.5 if node.gpu_type == 'T4' else 1
+            if self.gpu_type == 'MISC':
+                self.speedup = gpuConfig[node.gpu_type]
+            elif self.gpu_type == 'T4':
+                self.speedup = gpuConfig[node.gpu_type] / 2
+            elif str.__contains__(self.gpu_type, 'P100'):
+                self.speedup = gpuConfig[node.gpu_type] / 3
         self.update_status(node, current_time)
 
     def get_status(self):
