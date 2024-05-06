@@ -1,4 +1,3 @@
-from node import Node
 from config import gpuConfig
 
 
@@ -34,16 +33,16 @@ class Task:
             self.status = 'completed'
             print(f"Task {self.task_name} (id: {self.task_id}) has completed on node {node.node_id}.")
 
-    def get_waiting_time(self):
+    def get_waiting_time(self, current_time):
         # Task's waiting time is the difference between the actual start time and the planned start time
         if self.start_run_time:
             return self.start_run_time - self.start_time
         else:
-            return None
+            return current_time - self.start_time
 
     # Call this method to get a summary of a task's performance data
-    def get_performance_data(self):
-        waiting_time = self.get_waiting_time()
+    def get_performance_data(self, current_time):
+        waiting_time = self.get_waiting_time(current_time)
         return {
             'task_id': self.task_id,
             'start_time': self.start_time,

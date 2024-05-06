@@ -1,12 +1,8 @@
-import time
-
-from cluster import Cluster
 import sys
-import utils
+
 import config
-from node import Node
-from task import Task
-import datetime
+import utils
+from cluster import Cluster
 
 start_time = config.start_time
 end_time = config.end_time
@@ -33,9 +29,10 @@ class Simulator:
             print(f"Current time: {self.current_time}/{end_time}")
             self.cluster.time_step(self.current_time)  # 模拟时间流逝
             self.scheduler.schedule(self.current_time)  # 调度任务
-            if self.current_time== end_time:
+            # 限制时间，用于调试
+            if self.current_time == end_time:
                 break
-        if self.current_time== end_time:
+        if self.current_time == end_time:
             return
         while self.cluster.running_tasks.__sizeof__() > 0:
             self.current_time += 1
@@ -46,7 +43,7 @@ class Simulator:
         # 保存任务的性能数据
         performance_data = []
         for task in self.cluster.assigned_task:
-            performance_data.append(task.get_performance_data())
+            performance_data.append(task.get_performance_data(self.current_time))
         utils.save_performance_data(performance_data, self.schedulerConfig)
 
     def shutdown(self):
