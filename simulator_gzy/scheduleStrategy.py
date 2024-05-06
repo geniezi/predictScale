@@ -1,7 +1,3 @@
-from cluster import Cluster
-from node import Node
-
-
 class ScheduleStrategy:
     def __init__(self, cluster):
         self.cluster = cluster
@@ -13,7 +9,8 @@ class ScheduleStrategy:
 
 class FirstFitScheduleStrategy(ScheduleStrategy):
     def schedule(self, current_time):
-        for task in self.cluster.waiting_tasks:
+        while len(self.cluster.waiting_tasks) > 0:
+            task = self.cluster.waiting_tasks[0]
             node = self.cluster.get_first_assignable_node(task)
             if node:
                 self.cluster.assign_task(task, node, current_time)
@@ -21,7 +18,8 @@ class FirstFitScheduleStrategy(ScheduleStrategy):
 
 class LastFitScheduleStrategy(ScheduleStrategy):
     def schedule(self, current_time):
-        for task in self.cluster.waiting_tasks:
-            node = self.cluster.get_first_assignable_node(task)
+        while len(self.cluster.waiting_tasks) > 0:
+            task = self.cluster.waiting_tasks[0]
+            node = self.cluster.get_last_assignable_node(task)
             if node:
                 self.cluster.assign_task(task, node, current_time)
