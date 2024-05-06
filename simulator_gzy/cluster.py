@@ -56,5 +56,11 @@ class Cluster:
                 return node
         return None
 
+    def get_last_assignable_node(self, task):
+        for node in reversed(self.nodes):
+            if node.check_if_assignable(task):
+                return node
+        return None
+
     def shutdown(self):
         pass

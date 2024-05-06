@@ -1,21 +1,21 @@
 import time
 
 from cluster import Cluster
+import sys
 import utils
 import config
 from node import Node
 from task import Task
 import datetime
 
-
-date_to_convert = datetime.datetime(1970, 1, 15)
-end_time = int(time.mktime(date_to_convert.timetuple()))  # 调度任务截止时间
+start_time = config.start_time
+end_time = config.end_time
 
 
 class Simulator:
-    def __init__(self):
+    def __init__(self, schedulerConfig):
         self.cluster = Cluster()
-        self.schedulerConfig = "FirstFit"  # 调度策略
+        self.schedulerConfig = schedulerConfig  # 调度策略
         self.scheduler = config.scheduleStrategyConfig[self.schedulerConfig](self.cluster)
         self.node_list = utils.init_node_list()
         for node in self.node_list:
@@ -23,7 +23,7 @@ class Simulator:
         self.task_list = utils.init_task_list()
         for task in self.task_list:
             self.cluster.add_task(task)
-        self.current_time = 1036804
+        self.current_time = start_time
         print(f"Simulator initialization completed.")
 
     def run(self):
@@ -50,7 +50,12 @@ class Simulator:
 
 
 if __name__ == '__main__':
-    simulator = Simulator()
+    # 获取命令行参数
+    if len(sys.argv) >= 2:
+        scheduler = sys.argv[1]
+    else:
+        scheduler = "FirstFit"
+    simulator = Simulator(scheduler)
     simulator.run()
     simulator.save_results()
     simulator.shutdown()

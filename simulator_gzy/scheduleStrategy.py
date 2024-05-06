@@ -17,3 +17,11 @@ class FirstFitScheduleStrategy(ScheduleStrategy):
             node = self.cluster.get_first_assignable_node(task)
             if node:
                 self.cluster.assign_task(task, node, current_time)
+
+
+class LastFitScheduleStrategy(ScheduleStrategy):
+    def schedule(self, current_time):
+        for task in self.cluster.waiting_tasks:
+            node = self.cluster.get_first_assignable_node(task)
+            if node:
+                self.cluster.assign_task(task, node, current_time)
