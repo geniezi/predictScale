@@ -19,14 +19,16 @@ class Cluster:
             if task.start_time > current_time:
                 break
             self.waiting_tasks.append(task)
+            print(f"Task {task.task_name} (id: {task.task_id}) has arrived.")
             self.task_index += 1
 
     def time_step(self, current_time):
         # 单进程
         # 遍历全部节点，并为每个节点创建一个线程来检查任务是否已完成
+        # print("check and free resources on node")
         for node in self.nodes:
             self.check_and_free_resources_on_node(node, current_time)
-
+        # print("update started tasks")
         # 更新等待任务
         if self.task_index < len(self.tasks_queue):
             self.update_started_tasks(current_time)
