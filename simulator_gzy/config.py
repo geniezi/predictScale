@@ -16,7 +16,15 @@ scheduleStrategyConfig = {
     # "WorstFit": scheduleStrategy.WorstFitScheduleStrategy,
 }
 
-SAVE_FIELDS = ['task_id', 'start_time', 'start_run_time', 'end_run_time', 'waiting_time', 'require_time']
+SAVE_FIELDS = ['task_id',
+               'start_time',
+               'require_time',
+               'start_run_time',
+               'end_run_time',
+               'waiting_time',
+               'prefix_time',
+               'speedup',
+               'node_id',]
 
 start_date = datetime.datetime(1970, 1, 13)
 start_time = int(time.mktime(start_date.timetuple()))  # 调度任务开始时间

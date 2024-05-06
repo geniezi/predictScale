@@ -11,6 +11,7 @@ class Task:
         self.plan_gpu = plan_gpu
         self.gpu_type = gpu_type
         self.task_type = task_type
+        self.node = None
         self.status = 'waiting'  # waiting, running, completed
 
         # 新增属性
@@ -41,19 +42,22 @@ class Task:
 
     # Call this method to get a summary of a task's performance data
     def get_performance_data(self, current_time):
-        waiting_time = self.get_waiting_time(current_time)
         return {
             config.SAVE_FIELDS[0]: self.task_id,
             config.SAVE_FIELDS[1]: self.start_time,
-            config.SAVE_FIELDS[2]: self.start_run_time,
-            config.SAVE_FIELDS[3]: self.end_run_time,
-            config.SAVE_FIELDS[4]: waiting_time,
-            config.SAVE_FIELDS[5]: self.run_time
+            config.SAVE_FIELDS[2]: self.run_time,
+            config.SAVE_FIELDS[3]: self.start_run_time,
+            config.SAVE_FIELDS[4]: self.end_run_time,
+            config.SAVE_FIELDS[5]: self.get_waiting_time(current_time),
+            config.SAVE_FIELDS[6]: self.prefix_time,
+            config.SAVE_FIELDS[7]: self.speedup,
+            config.SAVE_FIELDS[8]: self.node.node_id if self.node else None,
 
         }
 
     def assign(self, node, current_time):
         self.is_assigned = True
+        self.node = node
         if self.gpu_type != '':
             if self.gpu_type == 'MISC':
                 self.speedup = config.gpuConfig[node.gpu_type]

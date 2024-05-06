@@ -10,3 +10,4 @@ data_random
 randomForest/forest/random
 randomForest/forest/random_random
 .idea
+/simulator_gzy/result/

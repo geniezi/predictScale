@@ -45,7 +45,7 @@ class Simulator:
     def save_results(self):
         # 保存任务的性能数据
         performance_data = []
-        for task in self.cluster.assigned_task:
+        for task in sorted(self.cluster.assigned_task, key=lambda x: x.task_id):
             performance_data.append(task.get_performance_data(self.current_time))
         utils.save_performance_data(performance_data, self)
 

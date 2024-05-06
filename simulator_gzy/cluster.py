@@ -1,13 +1,8 @@
-from node import Node
-import threading
-from multiprocessing import Process, Pool
-
-
 class Cluster:
     def __init__(self):
         self.nodes = []
         self.tasks_queue = []
-        self.assigned_task= []
+        self.assigned_task = []
         self.waiting_tasks = []
         self.running_tasks = []
         self.task_index = 0
@@ -30,7 +25,7 @@ class Cluster:
         # 单进程
         # 遍历全部节点，并为每个节点创建一个线程来检查任务是否已完成
         for node in self.nodes:
-            self.check_and_free_resources_on_node( node, current_time)
+            self.check_and_free_resources_on_node(node, current_time)
 
         # 更新等待任务
         if self.task_index < len(self.tasks_queue):
