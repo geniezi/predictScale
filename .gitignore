@@ -5,3 +5,8 @@ simulator_gzy/__pycache__/scheduleStrategy.cpython-38.pyc
 simulator_gzy/__pycache__/task.cpython-38.pyc
 simulator_gzy/__pycache__/utils.cpython-38.pyc
 util/__pycache__/osUtil.cpython-38.pyc
+/data_random_random/
+/data_random
+/randomForest/forest/random
+/randomForest/forest/random_random
+/.idea
