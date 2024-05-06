@@ -9,23 +9,23 @@ class ScheduleStrategy:
 
 class FirstFitScheduleStrategy(ScheduleStrategy):
     def schedule(self, current_time):
-        index = 0
-        while len(self.cluster.waiting_tasks) > 0 and index < len(self.cluster.nodes):
-            task = self.cluster.waiting_tasks[0]
+        temp_task = []
+        for task in self.cluster.waiting_tasks:
             node = self.cluster.get_first_assignable_node(task)
             if node:
                 self.cluster.assign_task(task, node, current_time)
             else:
-                index += 1
+                temp_task.append(task)
+        self.cluster.waiting_tasks = temp_task
 
 
 class LastFitScheduleStrategy(ScheduleStrategy):
     def schedule(self, current_time):
-        index = 0
-        while len(self.cluster.waiting_tasks) > 0 and index < len(self.cluster.nodes):
-            task = self.cluster.waiting_tasks[0]
+        temp_task = []
+        for task in self.cluster.waiting_tasks:
             node = self.cluster.get_last_assignable_node(task)
             if node:
                 self.cluster.assign_task(task, node, current_time)
             else:
-                index += 1
+                temp_task.append(task)
+        self.cluster.waiting_tasks = temp_task

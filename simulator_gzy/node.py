@@ -34,12 +34,3 @@ class Node:
         self.available_mem += task.plan_mem
         self.available_gpu += task.plan_gpu
         self.running_tasks.remove(task)
-
-    def get_completed_tasks(self, current_time):
-        # 遍历该节点上正在运行的任务
-        task_list = []
-        for task in self.running_tasks:
-            task.update_status(self, current_time)
-            if task.get_status() == "completed":
-                task_list.append(task)
-        return task_list

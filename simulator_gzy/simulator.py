@@ -24,7 +24,7 @@ class Simulator:
         print(f"Simulator initialization completed.")
 
     def run(self):
-        start= time.time()
+        start = time.time()
         while self.cluster.task_index < len(self.cluster.tasks_queue):
             self.current_time += 1
             print(f"Current time: {self.current_time}/{end_time}")

@@ -26,25 +26,16 @@ class Cluster:
         # 单进程
         # 遍历全部节点，并为每个节点创建一个线程来检查任务是否已完成
         # print("check and free resources on node")
-        for node in self.nodes:
-            self.check_and_free_resources_on_node(node, current_time)
+        for task in self.running_tasks:
+            task.update_status(current_time)
+        self.running_tasks = [task for task in self.running_tasks if task.status != 'completed']
         # print("update started tasks")
         # 更新等待任务
         if self.task_index < len(self.tasks_queue):
             self.update_started_tasks(current_time)
 
-    def check_and_free_resources_on_node(self, node, current_time):
-        # 遍历全部节点，检查它们上面运行的任务是否已完成
-        task_list = node.get_completed_tasks(current_time)
-        # 遍历task_list，释放资源
-        for task in task_list:
-            self.running_tasks.remove(task)
-            # 单进程
-            node.free_resources(task)
-
     def assign_task(self, task, node, current_time):
         node.assign_task(task, current_time)
-        self.waiting_tasks.remove(task)
         self.running_tasks.append(task)
         self.assigned_task.append(task)
 

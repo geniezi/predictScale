@@ -1,5 +1,6 @@
 import config
 
+
 class Task:
     def __init__(self, task_id, task_name, start_time, run_time, plan_cpu, plan_mem, plan_gpu, gpu_type, task_type):
         self.task_id = task_id
@@ -21,17 +22,18 @@ class Task:
         self.speedup = 1
         self.is_assigned = False
 
-    def update_status(self, node, current_time):
+    def update_status(self, current_time):
         if self.status == 'waiting' and self.is_assigned:
             self.start_run_time = current_time
             self.status = 'running'
-            print(f"Task {self.task_name} (id: {self.task_id}) has started on node {node.node_id}.")
+            print(f"Task {self.task_name} (id: {self.task_id}) has started on node {self.node.node_id}.")
 
         if self.status == 'running' and (
                 (current_time - self.start_run_time) * self.speedup + self.prefix_time >= self.run_time):
             self.end_run_time = current_time
             self.status = 'completed'
-            print(f"Task {self.task_name} (id: {self.task_id}) has completed on node {node.node_id}.")
+            print(f"Task {self.task_name} (id: {self.task_id}) has completed on node {self.node.node_id}.")
+            self.node.free_resources(self)
 
     def get_waiting_time(self, current_time):
         # Task's waiting time is the difference between the actual start time and the planned start time
@@ -65,7 +67,7 @@ class Task:
                 self.speedup = config.gpuConfig[node.gpu_type] / 2
             elif str.__contains__(self.gpu_type, '100'):
                 self.speedup = config.gpuConfig[node.gpu_type] / 3
-        self.update_status(node, current_time)
+        self.update_status(current_time)
 
     def get_status(self):
         return self.status
