@@ -36,7 +36,6 @@ class Cluster:
         task_list = node.get_completed_tasks(current_time)
         # 遍历task_list，释放资源
         for task in task_list:
-            print(task.task_id)
             self.running_tasks.remove(task)
             # 单进程
             node.free_resources(task)
