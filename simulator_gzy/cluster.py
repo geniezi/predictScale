@@ -7,6 +7,7 @@ class Cluster:
     def __init__(self):
         self.nodes = []
         self.tasks_queue = []
+        self.assigned_task= []
         self.waiting_tasks = []
         self.running_tasks = []
         self.task_index = 0
@@ -49,6 +50,7 @@ class Cluster:
         node.assign_task(task, current_time)
         self.waiting_tasks.remove(task)
         self.running_tasks.append(task)
+        self.assigned_task.append(task)
 
     def get_first_assignable_node(self, task):
         for node in self.nodes:

@@ -44,14 +44,13 @@ class Task:
     # Call this method to get a summary of a task's performance data
     def get_performance_data(self):
         waiting_time = self.get_waiting_time()
-        run_time = self.run_time if self.status == 'completed' else None
         return {
             'task_id': self.task_id,
             'start_time': self.start_time,
             'start_run_time': self.start_run_time if self.start_run_time else 'Not started yet',
             'end_run_time': self.end_run_time if self.end_run_time else 'Not completed yet',
             'waiting_time': waiting_time,
-            'run_time': run_time,
+            'require_time': self.run_time,
         }
 
     def assign(self, node, current_time):
@@ -61,7 +60,7 @@ class Task:
                 self.speedup = gpuConfig[node.gpu_type]
             elif self.gpu_type == 'T4':
                 self.speedup = gpuConfig[node.gpu_type] / 2
-            elif str.__contains__(self.gpu_type, 'P100'):
+            elif str.__contains__(self.gpu_type, '100'):
                 self.speedup = gpuConfig[node.gpu_type] / 3
         self.update_status(node, current_time)
 
