@@ -1,5 +1,4 @@
-from config import gpuConfig
-
+import config
 
 class Task:
     def __init__(self, task_id, task_name, start_time, run_time, plan_cpu, plan_mem, plan_gpu, gpu_type, task_type):
@@ -44,23 +43,24 @@ class Task:
     def get_performance_data(self, current_time):
         waiting_time = self.get_waiting_time(current_time)
         return {
-            'task_id': self.task_id,
-            'start_time': self.start_time,
-            'start_run_time': self.start_run_time if self.start_run_time else 'Not started yet',
-            'end_run_time': self.end_run_time if self.end_run_time else 'Not completed yet',
-            'waiting_time': waiting_time,
-            'require_time': self.run_time,
+            config.SAVE_FIELDS[0]: self.task_id,
+            config.SAVE_FIELDS[1]: self.start_time,
+            config.SAVE_FIELDS[2]: self.start_run_time,
+            config.SAVE_FIELDS[3]: self.end_run_time,
+            config.SAVE_FIELDS[4]: waiting_time,
+            config.SAVE_FIELDS[5]: self.run_time
+
         }
 
     def assign(self, node, current_time):
         self.is_assigned = True
         if self.gpu_type != '':
             if self.gpu_type == 'MISC':
-                self.speedup = gpuConfig[node.gpu_type]
+                self.speedup = config.gpuConfig[node.gpu_type]
             elif self.gpu_type == 'T4':
-                self.speedup = gpuConfig[node.gpu_type] / 2
+                self.speedup = config.gpuConfig[node.gpu_type] / 2
             elif str.__contains__(self.gpu_type, '100'):
-                self.speedup = gpuConfig[node.gpu_type] / 3
+                self.speedup = config.gpuConfig[node.gpu_type] / 3
         self.update_status(node, current_time)
 
     def get_status(self):

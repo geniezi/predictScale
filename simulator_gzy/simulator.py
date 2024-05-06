@@ -1,4 +1,5 @@
 import sys
+import time
 
 import config
 import utils
@@ -23,7 +24,7 @@ class Simulator:
         print(f"Simulator initialization completed.")
 
     def run(self):
-
+        start= time.time()
         while self.cluster.task_index < len(self.cluster.tasks_queue):
             self.current_time += 1
             print(f"Current time: {self.current_time}/{end_time}")
@@ -32,6 +33,8 @@ class Simulator:
             # 限制时间，用于调试
             if self.current_time == end_time:
                 break
+        end = time.time()
+        print("Time cost: ", end - start)
         if self.current_time == end_time:
             return
         while self.cluster.running_tasks.__sizeof__() > 0:
@@ -44,7 +47,7 @@ class Simulator:
         performance_data = []
         for task in self.cluster.assigned_task:
             performance_data.append(task.get_performance_data(self.current_time))
-        utils.save_performance_data(performance_data, self.schedulerConfig)
+        utils.save_performance_data(performance_data, self)
 
     def shutdown(self):
         self.cluster.shutdown()
