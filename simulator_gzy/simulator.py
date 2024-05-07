@@ -1,26 +1,36 @@
-import sys
 import time
+from datetime import datetime
+
+import config
+import utils
+import argparse
+from cluster import Cluster
+import argparse
+import time
+from datetime import datetime
 
 import config
 import utils
 from cluster import Cluster
 
-start_time = config.start_time
-end_time = config.end_time
-
 
 class Simulator:
-    def __init__(self, schedulerConfig):
+    def __init__(self, scheduler_config, start_date, end_date, num_nodes_mul):
         self.cluster = Cluster()
-        self.schedulerConfig = schedulerConfig  # 调度策略
+        self.schedulerConfig = scheduler_config  # 调度策略
         self.scheduler = config.scheduleStrategyConfig[self.schedulerConfig](self.cluster)
-        self.node_list = utils.init_node_list()
+        self.start_date = datetime.strptime(start_date, '%Y-%m-%d')
+        self.end_date = datetime.strptime(end_date, '%Y-%m-%d')
+        self.start_time = self.start_date.timestamp()
+        self.end_time = self.end_date.timestamp()
+        self.current_time = self.start_time
+
+        self.node_list = utils.init_node_list(num_nodes_mul)
         for node in self.node_list:
             self.cluster.add_node(node)
         self.task_list = utils.init_task_list()
         for task in self.task_list:
             self.cluster.add_task(task)
-        self.current_time = start_time
         print(f"Simulator initialization completed.")
 
     def run(self):
@@ -29,18 +39,19 @@ class Simulator:
             self.current_time += 1
             self.cluster.time_step(self.current_time)  # 模拟时间流逝
             self.scheduler.schedule(self.current_time)  # 调度任务
-            print(f"Current time: {self.current_time}/{end_time}, Running tasks: {len(self.cluster.running_tasks)}, Waiting tasks: {len(self.cluster.waiting_tasks)}")
+            print(
+                f"Current time: {self.current_time}/{self.end_time}, Running tasks: {len(self.cluster.running_tasks)}, Waiting tasks: {len(self.cluster.waiting_tasks)}")
             # 限制时间，用于调试
-            if self.current_time >= end_time:
+            if self.current_time >= self.end_time:
                 break
         end = time.time()
         print("Total time cost: ", end - start)
-        if self.current_time >= end_time:
+        if self.current_time >= self.end_time:
             return
         while len(self.cluster.running_tasks) > 0:
             self.current_time += 1
             self.cluster.time_step(self.current_time)
-            print(f"Current time: {self.current_time}/{end_time}")
+            print(f"Current time: {self.current_time}/{self.end_time}")
 
     def save_results(self):
         # 保存任务的性能数据
@@ -54,12 +65,24 @@ class Simulator:
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description='Simulator.')
+    parser.add_argument('--scheduler', default='FirstFit', type=str, help='Scheduler Policy')
+    parser.add_argument('-sd', '--start_date', default='1970-01-13', type=str, help='Start Date')
+    parser.add_argument('-ed', '--end_date', default='1970-01-15', type=str, help='End Date')
+    parser.add_argument('-nm', '--num_nodes_mul', default=40, type=int, help='Num of Nodes Multiplier')
+
+    args = parser.parse_args()
+    SCHEDULER = args.scheduler
+    START_DATE = args.start_date
+    END_DATE = args.end_date
+    NUM_NODES_MUL = args.num_nodes_mul
+
     # 获取命令行参数
-    if len(sys.argv) >= 2:
-        scheduler = sys.argv[1]
-    else:
-        scheduler = "FirstFit"
-    simulator = Simulator(scheduler)
+    simulator = Simulator(
+        scheduler_config=SCHEDULER,
+        start_date=START_DATE,
+        end_date=END_DATE,
+        num_nodes_mul=NUM_NODES_MUL)
     simulator.run()
     simulator.save_results()
     simulator.shutdown()
