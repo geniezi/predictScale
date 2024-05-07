@@ -18,9 +18,12 @@ result_path = 'simulator_gzy/result/'
 def init_node_list():
     node_list = []
     node_id = 0
-    mul = 50  # 控制机器数量
+    mul = 30  # 控制机器数量
     for _ in range(10 * mul):  # low-ended machines first
         node_list.append(Node(node_id, 96, 512, 2, gpu_type='T4'))
+        node_id += 1
+    for _ in range(5 * mul):
+        node_list.append(Node(node_id, 96, 512, 8, gpu_type='T4'))
         node_id += 1
     for _ in range(13 * mul):  # low-ended machines first
         node_list.append(Node(node_id, 64, 512, 2, gpu_type='P100'))
