@@ -1,6 +1,3 @@
-import datetime
-import time
-
 import scheduleStrategy
 
 gpuConfig = {
@@ -27,7 +24,3 @@ SAVE_FIELDS = ['task_id',
                'node_id',
                'status']
 
-start_date = datetime.datetime(1970, 1, 13)
-start_time = int(time.mktime(start_date.timetuple()))  # 调度任务开始时间
-end_date = datetime.datetime(1970, 1, 14)
-end_time = int(time.mktime(end_date.timetuple()))  # 调度任务截止时间
