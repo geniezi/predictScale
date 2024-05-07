@@ -24,7 +24,8 @@ SAVE_FIELDS = ['task_id',
                'waiting_time',
                'prefix_time',
                'speedup',
-               'node_id',]
+               'node_id',
+               'status']
 
 start_date = datetime.datetime(1970, 1, 13)
 start_time = int(time.mktime(start_date.timetuple()))  # 调度任务开始时间

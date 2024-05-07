@@ -39,13 +39,13 @@ class Simulator:
             return
         while len(self.cluster.running_tasks) > 0:
             self.current_time += 1
-            print(f"Current time: {self.current_time}/{end_time}")
             self.cluster.time_step(self.current_time)
+            print(f"Current time: {self.current_time}/{end_time}")
 
     def save_results(self):
         # 保存任务的性能数据
         performance_data = []
-        for task in sorted(self.cluster.assigned_task, key=lambda x: x.task_id):
+        for task in self.cluster.assigned_task:
             performance_data.append(task.get_performance_data(self.current_time))
         utils.save_performance_data(performance_data, self)
 
