@@ -33,7 +33,7 @@ class Task:
             self.end_run_time = current_time
             self.status = 'completed'
             print(f"Task {self.task_name} (id: {self.task_id}) has completed on node {self.node.node_id}.")
-            return self.node
+            self.node.free_resources(self)
 
     def get_waiting_time(self, current_time):
         # Task's waiting time is the difference between the actual start time and the planned start time

@@ -27,17 +27,17 @@ class Simulator:
         start = time.time()
         while self.cluster.task_index < len(self.cluster.tasks_queue):
             self.current_time += 1
-            print(f"Current time: {self.current_time}/{end_time}")
             self.cluster.time_step(self.current_time)  # 模拟时间流逝
             self.scheduler.schedule(self.current_time)  # 调度任务
+            print(f"Current time: {self.current_time}/{end_time}")
             # 限制时间，用于调试
-            if self.current_time == end_time:
+            if self.current_time >= end_time:
                 break
         end = time.time()
-        print("Time cost: ", end - start)
-        if self.current_time == end_time:
+        print("Total time cost: ", end - start)
+        if self.current_time >= end_time:
             return
-        while self.cluster.running_tasks.__sizeof__() > 0:
+        while len(self.cluster.running_tasks) > 0:
             self.current_time += 1
             print(f"Current time: {self.current_time}/{end_time}")
             self.cluster.time_step(self.current_time)
