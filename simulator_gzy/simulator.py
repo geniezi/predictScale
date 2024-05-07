@@ -29,7 +29,7 @@ class Simulator:
             self.current_time += 1
             self.cluster.time_step(self.current_time)  # 模拟时间流逝
             self.scheduler.schedule(self.current_time)  # 调度任务
-            print(f"Current time: {self.current_time}/{end_time}")
+            print(f"Current time: {self.current_time}/{end_time}, Running tasks: {len(self.cluster.running_tasks)}, Waiting tasks: {len(self.cluster.waiting_tasks)}")
             # 限制时间，用于调试
             if self.current_time >= end_time:
                 break
