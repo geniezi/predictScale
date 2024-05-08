@@ -61,12 +61,11 @@ def init_task_list():
 
 
 def save_performance_data(performance_data, simulator):
-    save_path = simulator.save_path+simulator.schedulerConfig+'/'
+    save_path = simulator.save_path + simulator.schedulerConfig + '/' + simulator.num_nodes_mul + 'nodesMul/'
     # 保存任务性能数据到CSV文件
     # 文件名格式：调度策略_开始日期_结束日期_节点数_任务数,开始日期和结束日期格式为MM-DD
     result_name = simulator.start_date.strftime(
         '%m-%d') + '_' + simulator.end_date.strftime('%m-%d') + '_' + str(
-        list.__sizeof__(simulator.node_list)) + 'nodes_' + str(
         list.__sizeof__(simulator.cluster.assigned_task)) + 'tasks_'
     save_dir = OSUtil.create_folder_with_incrementing_number(save_path, result_name)
 
@@ -76,4 +75,4 @@ def save_performance_data(performance_data, simulator):
         writer.writeheader()
         for data in performance_data:
             writer.writerow(data)
-    print("Performance data saved to performance_data.csv")
+    print(f" Performance data saved to {save_dir}performance_data.csv")

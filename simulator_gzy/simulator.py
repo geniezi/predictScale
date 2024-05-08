@@ -25,6 +25,7 @@ class Simulator:
         self.end_time = self.end_date.timestamp()
         self.current_time = self.start_time
         self.save_path=save_path
+        self.num_nodes_mul = num_nodes_mul
 
         self.node_list = utils.init_node_list(num_nodes_mul)
         for node in self.node_list:
