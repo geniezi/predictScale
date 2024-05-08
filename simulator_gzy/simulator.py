@@ -15,7 +15,7 @@ from cluster import Cluster
 
 
 class Simulator:
-    def __init__(self, scheduler_config, start_date, end_date, num_nodes_mul):
+    def __init__(self, scheduler_config, start_date, end_date, num_nodes_mul, save_path):
         self.cluster = Cluster()
         self.schedulerConfig = scheduler_config  # 调度策略
         self.scheduler = config.scheduleStrategyConfig[self.schedulerConfig](self.cluster)
@@ -24,6 +24,7 @@ class Simulator:
         self.start_time = self.start_date.timestamp()
         self.end_time = self.end_date.timestamp()
         self.current_time = self.start_time
+        self.save_path=save_path
 
         self.node_list = utils.init_node_list(num_nodes_mul)
         for node in self.node_list:
@@ -70,19 +71,22 @@ if __name__ == '__main__':
     parser.add_argument('-sd', '--start_date', default='1970-01-13', type=str, help='Start Date')
     parser.add_argument('-ed', '--end_date', default='1970-01-15', type=str, help='End Date')
     parser.add_argument('-nm', '--num_nodes_mul', default=40, type=int, help='Num of Nodes Multiplier')
+    parser.add_argument('sp', '--save_path', default='simulator_gzy/result/', type=str, help='Save Path')
 
     args = parser.parse_args()
     SCHEDULER = args.scheduler
     START_DATE = args.start_date
     END_DATE = args.end_date
     NUM_NODES_MUL = args.num_nodes_mul
+    SAVE_PATH = args.save_path
 
     # 获取命令行参数
     simulator = Simulator(
         scheduler_config=SCHEDULER,
         start_date=START_DATE,
         end_date=END_DATE,
-        num_nodes_mul=NUM_NODES_MUL)
+        num_nodes_mul=NUM_NODES_MUL,
+        save_path=SAVE_PATH)
     simulator.run()
     simulator.save_results()
     simulator.shutdown()
