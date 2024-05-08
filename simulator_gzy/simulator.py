@@ -71,7 +71,7 @@ if __name__ == '__main__':
     parser.add_argument('-sd', '--start_date', default='1970-01-13', type=str, help='Start Date')
     parser.add_argument('-ed', '--end_date', default='1970-01-15', type=str, help='End Date')
     parser.add_argument('-nm', '--num_nodes_mul', default=40, type=int, help='Num of Nodes Multiplier')
-    parser.add_argument('sp', '--save_path', default='simulator_gzy/result/', type=str, help='Save Path')
+    parser.add_argument('-sp', '--save_path', default='simulator_gzy/result/', type=str, help='Save Path')
 
     args = parser.parse_args()
     SCHEDULER = args.scheduler
