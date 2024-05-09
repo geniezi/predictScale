@@ -1,4 +1,10 @@
 import os
+import pandas as pd
+
+def read_data(random):
+    FILTER_DATA_DIR = 'data_' + random + '/'
+    data = pd.read_csv(FILTER_DATA_DIR + 'result_dft.csv')
+    return data
 
 
 def create_folder_with_incrementing_number(base_path, base_folder_name):

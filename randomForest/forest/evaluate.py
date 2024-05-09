@@ -10,7 +10,6 @@ if not os.path.exists(result_dir + 'best/'):
     os.makedirs(result_dir + 'best/')
 for i in range(1, 8):
     print(f'正在处理{i}个参数的组合')
-    # 打开当前参数的文件夹randomForest/forest/random_random/14_21/1_parameter
     # 每轮进行结果检查，留下最好的几个
     # 读取文件夹下的classification_report.txt文件
     classification_reports = []
