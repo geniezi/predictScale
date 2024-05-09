@@ -3,9 +3,9 @@ import os
 import pandas as pd
 
 
-def read_data(random):
-    FILTER_DATA_DIR = 'data_' + random + '/'
-    data = pd.read_csv(FILTER_DATA_DIR + 'result_dft.csv')
+def read_data(file):
+    FILTER_DATA_DIR = 'dataset' + '/'
+    data = pd.read_csv(FILTER_DATA_DIR + file, sep='\t')
     return data
 
 
