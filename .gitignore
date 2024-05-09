@@ -1,2 +1,15 @@
-/old
-
+old/simulator_gzy/__pycache__/cluster.cpython-38.pyc
+old/simulator_gzy/__pycache__/config.cpython-38.pyc
+old/simulator_gzy/__pycache__/node.cpython-38.pyc
+old/simulator_gzy/__pycache__/scheduleStrategy.cpython-38.pyc
+old/simulator_gzy/__pycache__/task.cpython-38.pyc
+old/simulator_gzy/__pycache__/utils.cpython-38.pyc
+old/util/__pycache__/osUtil.cpython-38.pyc
+old/data_random_random
+old/data_random
+old/randomForest/forest/random
+old/randomForest/forest/random_random
+.idea
+/old/simulator_gzy/result/
+/old/randomForest/forest/random.7z
+/old/randomForest/forest/random_random.7z
