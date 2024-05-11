@@ -91,17 +91,13 @@ def merge_all_in_one(file_paths):
     df = pd.DataFrame()
     for file_path in file_paths:
         data = pd.read_csv(file_path, sep='\t')
-        data = data[['Time', 'Requests']]
-        # 合并数据，两个数据time可能有重复，需要求和
+        # 合并数据,将两个对象的Time合并为一列
         df = pd.concat([df, data]).groupby('Time').sum().reset_index()
-    # 截取一个日期并保存
-    df['Time1'] = pd.to_datetime(df['Time']).dt.date
-    # 截取Time中的时间，按照时间排序
-    df['Time'] = pd.to_datetime(df['Time']).dt.time
+
+    # 转换成日期时间格式
+    df['Time'] = pd.to_datetime(df['Time']).dt.date
     df = df.sort_values(by='Time')
-    # 转换回带日期的时间
-    df['Time'] = df['Time1'].astype(str) + ' ' + df['Time'].astype(str)
-    df = df.drop('Time1', axis=1)
+
 
     df.to_csv('dataset/WorldCup/All.tsv', sep='\t', index=False)
 
