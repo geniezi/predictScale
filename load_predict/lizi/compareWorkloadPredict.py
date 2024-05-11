@@ -1,3 +1,4 @@
+import csv
 import importlib
 import math
 
@@ -962,6 +963,10 @@ if __name__ == "__main__":
 
     # 网格搜索
     excel_file = 'results.csv'
+    # csv文件头
+    with open(excel_file, 'w', newline='') as f:
+        csv_write = csv.writer(f)
+        csv_write.writerow(['model', 'epochs', 'batchsize', 'units1', 'units2', 'MSE', 'RMSE', 'MAE', 'AR2'])
     # epochs = 300
     epochList = [500, 1000, 1500, 2000, 2500, 3000, 3500]
     # batchSize = 128
@@ -969,7 +974,7 @@ if __name__ == "__main__":
     # units = 16
     # units2 = 32
     unitList = [4, 8, 16, 32, 64]
-    results_df = []
+    # results_df = []
     for a in epochList:
         epochs = a
         for b in batchList:
@@ -981,16 +986,33 @@ if __name__ == "__main__":
                     for key in modelNames.keys():
                         modelNames[key] = getattr(current_module, f"new_{key}")(modelParameters[key])
                     print(f"数据集: {filePath}")
+                    print(f"开始训练：\nnepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}")
                     for key in modelNames.keys():
-                        modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
-                        # 将结果添加到 DataFrame 中
-                        rmse, mse, mae, ar2 = modelResults[key]
-                        results_df.append([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
+                        # 判断csv文件中是否有相同key, epochs, batchSize, units, units2的行
+                        # 如果有则不写入
+                        flag = 0
+                        with open(excel_file, 'r') as f:
+                            reader = csv.reader(f)
+                            for row in reader:
+                                if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
+                                        row[3]) == units and int(row[4]) == units2:
+                                    flag = 1
+                                    break
+                        if flag == 0:
+                            modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
+                            # 将结果添加到 DataFrame 中
+                            rmse, mse, mae, ar2 = modelResults[key]
+                            # 直接写入 csv 文件
+                            with open(excel_file, 'a', newline='') as f:
+                                csv_write = csv.writer(f)
+                                csv_write.writerow([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
 
-    df = pd.DataFrame(results_df,
-                      columns=['model', 'epochs', 'batchsize', 'units1', 'units2', 'MSE', 'RMSE', 'MAE', 'AR2'])
-    # 将结果保存到 Excel 文件中
-    df.to_csv(excel_file, index=False)
+                            # results_df.append([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
+
+    # df = pd.DataFrame(results_df,
+    #                   columns=['model', 'epochs', 'batchsize', 'units1', 'units2', 'MSE', 'RMSE', 'MAE', 'AR2'])
+    # # 将结果保存到 Excel 文件中
+    # df.to_csv(excel_file, index=False)
 
     # units = 2
     # units2 = 2
