@@ -1,0 +1,21 @@
+'''
+    kubernetes HPA
+'''
+import os
+import time
+
+from config.Config import Config
+from util.KubernetesClient import KubernetesClient
+
+
+class KHPA:
+    def __init__(self, config: Config):
+        self.config = config
+        self.k8s_util = KubernetesClient(config)
+        self.duration = config.duration
+
+    def start(self):
+        # need rights of administrators
+        print('启动 KHPA')
+        os.system('sh ./others/HPA/%s.sh'%self.config.namespace)
+        time.sleep(self.duration)
