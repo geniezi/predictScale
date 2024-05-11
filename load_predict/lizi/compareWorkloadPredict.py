@@ -1,6 +1,7 @@
 import csv
 import importlib
 import math
+import os
 
 import numpy as np
 import pandas as pd
@@ -988,16 +989,18 @@ if __name__ == "__main__":
                     print(f"数据集: {filePath}")
                     print(f"开始训练：\nnepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}")
                     for key in modelNames.keys():
+                        # 判断文件是否存在
                         # 判断csv文件中是否有相同key, epochs, batchSize, units, units2的行
                         # 如果有则不写入
                         flag = 0
-                        with open(excel_file, 'r') as f:
-                            reader = csv.reader(f)
-                            for row in reader:
-                                if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
-                                        row[3]) == units and int(row[4]) == units2:
-                                    flag = 1
-                                    break
+                        if os.path.exists(excel_file):
+                            with open(excel_file, 'r') as f:
+                                reader = csv.reader(f)
+                                for row in reader:
+                                    if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
+                                            row[3]) == units and int(row[4]) == units2:
+                                        flag = 1
+                                        break
                         if flag == 0:
                             modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
                             # 将结果添加到 DataFrame 中
