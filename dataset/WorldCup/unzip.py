@@ -94,9 +94,10 @@ def merge_all_in_one(file_paths):
         # 合并数据,将两个对象的Time合并为一列
         df = pd.concat([df, data]).groupby('Time').sum().reset_index()
 
-    # 转换成日期时间格式
-    df['Time'] = pd.to_datetime(df['Time']).dt.date
-    df = df.sort_values(by='Time')
+    # 转换成时间戳
+    df['timestamp']=pd.to_datetime(df['Time']).astype(int)/10**9
+    df = df.sort_values(by='timestamp')
+    df.drop('timestamp', axis=1, inplace=True)
 
 
     df.to_csv('dataset/WorldCup/All.tsv', sep='\t', index=False)
