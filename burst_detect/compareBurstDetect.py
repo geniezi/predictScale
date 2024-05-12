@@ -64,13 +64,16 @@ def window_average(data, window_size):
     draw(data, 'window:{}'.format(window_size))
 
 
-def variate(data):
+def variate(data,window_size):
     # 计算每秒请求的变化值，即每秒请求量减去前一秒请求量的绝对值
     data['variate'] = data['requests_scale'].diff().abs()
-    # 计算变化值的平均值
-    avg = data['variate'].mean()
+    # 计算滑动窗内变化值的平均值
+    avg = data['variate'].rolling(window=window_size).mean()
+    # avg=data['variate'].mean()
+
     # 计算变化值的标准差
-    std = data['variate'].std()
+    std = data['variate'].rolling(window=window_size).std()
+    # std = data['variate'].std()
     # 计算变化值的阈值
     threshold = avg + 3 * std
     # 判断是否为突发点
@@ -79,7 +82,8 @@ def variate(data):
         if i == 0:
             burst.append(0)
         else:
-            if data['variate'].iloc[i] > threshold:
+            if data['variate'].iloc[i] > threshold.iloc[i]:
+            # if data['variate'].iloc[i] > threshold:
                 burst.append(1)
             else:
                 burst.append(0)
@@ -132,9 +136,9 @@ def fft(data):
 def main():
     data = osUtil.read_data('pageviews_by_minute.tsv')
     # 复制数据
-    for i in range(1, 15):
-        window_average(data.copy(), i*10)
-    # variate(data.copy())
+    # for i in range(1, 15):
+    #     window_average(data.copy(), i*10)
+    variate(data.copy(),15)
     # fft(data.copy())
 
 
