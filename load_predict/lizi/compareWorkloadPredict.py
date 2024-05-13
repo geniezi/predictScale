@@ -6,6 +6,7 @@ import os
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+from keras.callbacks import Callback
 from keras.callbacks import EarlyStopping
 from keras.engine.base_layer import Layer
 from keras.layers import LSTM, GRU
@@ -286,6 +287,50 @@ def new_double_lstm_with_attention(dataScaled):
             })
             return config
 
+    class ModelCheckpointAtEpoch(Callback):
+        def __init__(self, data_scaled, time_sequence_length, future_steps, epochs_to_save, batchSize, units, units2,
+                     attention_units):
+            # 传入需要的数据
+            self.data_scaled = data_scaled
+            self.time_sequence_length = time_sequence_length
+            self.future_steps = future_steps
+            self.epochs_to_save = epochs_to_save
+            self.batchSize = batchSize
+            self.units = units
+            self.units2 = units2
+            self.attention_units = attention_units
+
+        def on_epoch_end(self, epoch, logs=None):
+            # 检查当前epoch是否在指定的列表中
+            if epoch in self.epochs_to_save:
+                flag = 0
+                if os.path.exists(excel_file):
+                    with open(excel_file, 'r') as f:
+                        reader = csv.reader(f)
+                        for row in reader:
+                            if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
+                                    row[3]) == units and int(row[4]) == units2 and int(row[5]) == attention_units:
+                                flag = 1
+                                break
+                if flag == 0:
+                    predict_data = []
+                    # 执行保存操作
+                    for step in range(trainDataLength + validDataLength, testDataLength - self.future_steps,
+                                      self.future_steps):
+                        X = np.array([self.data_scaled[step - self.time_sequence_length: step, 0]])
+                        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+                        predict_data.append(self.model.predict(X)[0][0])
+
+                    # 你可以在这里加入将 self.predict_data 保存到文件的代码
+                    rmse, mse, mae, ar2 = rmse_and_mse_mae_compute(actualData, predict_data,
+                                                                   "double_lstm_with_attention")
+                    # 将结果添加到 DataFrame 中
+                    # 直接写入 csv 文件
+                    with open(excel_file, 'a', newline='') as f:
+                        csv_write = csv.writer(f)
+                        csv_write.writerow(
+                            ["double_lstm_with_attention", epoch, self.batchSize, self.units, self.units2,
+                             self.attention_units, rmse, mse, mae, ar2])
 
     def gru_prepare_data(data, time_steps):
         X, y = [], []
@@ -312,9 +357,13 @@ def new_double_lstm_with_attention(dataScaled):
     early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_times, restore_best_weights=True)
     # 编译模型
     model.compile(optimizer=optimizer, loss='mean_squared_error')
+
+    epochs_to_save = [500, 1000, 1500, 2000, 2500, 3000, 3500]
+    checkpoint_callback = ModelCheckpointAtEpoch(dataScaled, time_sequence_length, future_steps, epochs_to_save,
+                                                 batchSize, units, units2, attention_units)
     # 训练模型
     model.fit(X_train, y_train, epochs=epochs, batch_size=batchSize, shuffle=False, validation_data=(X_val, y_val),
-              callbacks=[early_stopping])
+              callbacks=[early_stopping, checkpoint_callback])
     predictData = []
     for step in range(trainDataLength + validDataLength, testDataLength - future_steps, future_steps):
         X = np.array([dataScaled[step - time_sequence_length: step, 0]])
@@ -964,14 +1013,13 @@ if __name__ == "__main__":
     # modelParameters = {"lstm": dataScaled}
     # modelResults = {"lstm": []}
 
-    modelNames = {"double_lstm": []}
-    modelParameters = {"double_lstm": dataScaled}
-    modelResults = {"double_lstm": []}
+    # modelNames = {"double_lstm": []}
+    # modelParameters = {"double_lstm": dataScaled}
+    # modelResults = {"double_lstm": []}
 
-
-    # modelNames = {"double_lstm_with_attention": []}
-    # modelParameters = {"double_lstm_with_attention": dataScaled}
-    # modelResults = {"double_lstm_with_attention": []}
+    modelNames = {"double_lstm_with_attention": []}
+    modelParameters = {"double_lstm_with_attention": dataScaled}
+    modelResults = {"double_lstm_with_attention": []}
 
     # modelNames = {"double_lstm_with_mul_attention": []}
     # modelParameters = {"double_lstm_with_mul_attention": dataScaled}
@@ -1069,9 +1117,9 @@ if __name__ == "__main__":
     # csv文件头
     with open(excel_file, 'w', newline='') as f:
         csv_write = csv.writer(f)
-        csv_write.writerow(['model', 'epochs', 'batchsize', 'units1', 'units2', 'MSE', 'RMSE', 'MAE', 'AR2'])
-    # epochs = 300
-    epochList = [500, 1000, 1500, 2000, 2500, 3000, 3500]
+        csv_write.writerow(['model', 'epochs', 'batchsize', 'units1', 'units2', 'units3', 'MSE', 'RMSE', 'MAE', 'AR2'])
+    epochs = 3500
+    # epochList = [500, 1000, 1500, 2000, 2500, 3000, 3500]
     # batchSize = 128
     batchList = [64, 128, 256, 512, 1024]
     # units = 16
@@ -1086,6 +1134,16 @@ if __name__ == "__main__":
                 units = c
                 for d in unitList:
                     units2 = d
+    # for a in epochList:
+    epochs = epochs
+    for b in batchList:
+        batchSize = b
+        for c in unitList:
+            units = c
+            for d in unitList:
+                units2 = d
+                for e in unitList:
+                    attention_units = e
                     # for key in modelNames.keys():
                     for key in modelNames.keys():
                         # 判断文件是否存在
@@ -1097,20 +1155,22 @@ if __name__ == "__main__":
                                 reader = csv.reader(f)
                                 for row in reader:
                                     if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
-                                            row[3]) == units and int(row[4]) == units2:
+                                            row[3]) == units and int(row[4]) == units2 and int(
+                                        row[5]) == attention_units:
                                         flag = 1
                                         break
                         if flag == 0:
                             print(f"数据集: {filePath}")
-                            print(f"开始训练：\nepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}")
+                            print(
+                                f"开始训练：\nepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}, attention_units: {attention_units}")
                             modelNames[key] = getattr(current_module, f"new_{key}")(modelParameters[key])
-                            modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
-                            # 将结果添加到 DataFrame 中
-                            rmse, mse, mae, ar2 = modelResults[key]
-                            # 直接写入 csv 文件
-                            with open(excel_file, 'a', newline='') as f:
-                                csv_write = csv.writer(f)
-                                csv_write.writerow([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
+                            # modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
+                            # # 将结果添加到 DataFrame 中
+                            # rmse, mse, mae, ar2 = modelResults[key]
+                            # # 直接写入 csv 文件
+                            # with open(excel_file, 'a', newline='') as f:
+                            #     csv_write = csv.writer(f)
+                            #     csv_write.writerow([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
 
                             # results_df.append([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
 
