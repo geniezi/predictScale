@@ -1126,14 +1126,6 @@ if __name__ == "__main__":
     # units2 = 32
     unitList = [4, 8, 16, 32, 64]
     # results_df = []
-    for a in epochList:
-        epochs = a
-        for b in batchList:
-            batchSize = b
-            for c in unitList:
-                units = c
-                for d in unitList:
-                    units2 = d
     # for a in epochList:
     epochs = epochs
     for b in batchList:
