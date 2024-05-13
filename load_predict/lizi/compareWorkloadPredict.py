@@ -249,7 +249,7 @@ def new_double_lstm_with_attention(dataScaled):
 
             # Initialize weights
             self.v = self.add_weight(name="v",
-                                     shape=(input_dim, 1),
+                                     shape=(self.attention_units, 1),  # 修改此处的形状
                                      initializer="random_normal",
                                      trainable=True)
             self.w_query = self.add_weight(name="w_query",
@@ -267,7 +267,7 @@ def new_double_lstm_with_attention(dataScaled):
             query = tf.matmul(inputs, self.w_query)
             key = tf.matmul(inputs, self.w_key)
             tanh_output = tf.nn.tanh(query + key)
-            score = tf.matmul(tanh_output, self.v, transpose_b=True)  # Perform transpose on self.v
+            score = tf.matmul(tanh_output, self.v)  # 不需要进行转置操作
             attention_weights = tf.nn.softmax(score, axis=1)
 
             # Weighted sum of inputs
@@ -279,6 +279,14 @@ def new_double_lstm_with_attention(dataScaled):
         def compute_output_shape(self, input_shape):
             return (input_shape[0], input_shape[-1])
 
+        def get_config(self):
+            config = super(AdditiveAttention, self).get_config()
+            config.update({
+                'attention_units': self.attention_units
+            })
+            return config
+
+
     def gru_prepare_data(data, time_steps):
         X, y = [], []
         for i in range(len(data) - time_steps - future_steps):
@@ -289,7 +297,7 @@ def new_double_lstm_with_attention(dataScaled):
     # 构建 LSTM 模型
     model = Sequential()
     model.add(LSTM(units=units, input_shape=(time_sequence_length, 1), return_sequences=True))
-    model.add(LSTM(units=units2))
+    model.add(LSTM(units=units2,return_sequences=True))
     model.add(AdditiveAttention(attention_units=attention_units))
     model.add(Dense(units=future_steps))
 
@@ -608,7 +616,7 @@ def new_gru_with_attention(dataScaled):
 
             # Initialize weights
             self.v = self.add_weight(name="v",
-                                     shape=(input_dim, 1),
+                                     shape=(self.attention_units, 1),  # 修改此处的形状
                                      initializer="random_normal",
                                      trainable=True)
             self.w_query = self.add_weight(name="w_query",
@@ -626,7 +634,7 @@ def new_gru_with_attention(dataScaled):
             query = tf.matmul(inputs, self.w_query)
             key = tf.matmul(inputs, self.w_key)
             tanh_output = tf.nn.tanh(query + key)
-            score = tf.matmul(tanh_output, self.v, transpose_b=True)  # Perform transpose on self.v
+            score = tf.matmul(tanh_output, self.v)  # 不需要进行转置操作
             attention_weights = tf.nn.softmax(score, axis=1)
 
             # Weighted sum of inputs
@@ -638,6 +646,13 @@ def new_gru_with_attention(dataScaled):
         def compute_output_shape(self, input_shape):
             return (input_shape[0], input_shape[-1])
 
+        def get_config(self):
+            config = super(AdditiveAttention, self).get_config()
+            config.update({
+                'attention_units': self.attention_units
+            })
+            return config
+
     def gru_prepare_data(data, time_steps):
         X, y = [], []
         for i in range(len(data) - time_steps - future_steps):
@@ -648,7 +663,7 @@ def new_gru_with_attention(dataScaled):
     np.random.seed(42)
     tf.random.set_seed(42)
     # 修改注意力层的参数
-    attention_units = 1  # 增加注意力权重的维度
+    # attention_units = 1  # 增加注意力权重的维度
     # 模型参数
     input_dim = features  # 输入数据的特征维度
     gru_units = units  # GRU单元数量
