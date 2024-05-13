@@ -237,6 +237,84 @@ def new_double_lstm(dataScaled):
     return predictData
 
 
+def new_double_lstm_with_attention(dataScaled):
+    class AdditiveAttention(Layer):
+        def __init__(self, attention_units=1, **kwargs):
+            self.attention_units = attention_units
+            super(AdditiveAttention, self).__init__(**kwargs)
+
+        def build(self, input_shape):
+            # Get the last dimension of the input shape
+            input_dim = input_shape[-1]
+
+            # Initialize weights
+            self.v = self.add_weight(name="v",
+                                     shape=(input_dim, 1),
+                                     initializer="random_normal",
+                                     trainable=True)
+            self.w_query = self.add_weight(name="w_query",
+                                           shape=(input_dim, self.attention_units),
+                                           initializer="random_normal",
+                                           trainable=True)
+            self.w_key = self.add_weight(name="w_key",
+                                         shape=(input_dim, self.attention_units),
+                                         initializer="random_normal",
+                                         trainable=True)
+            super(AdditiveAttention, self).build(input_shape)
+
+        def call(self, inputs):
+            # Calculate attention scores
+            query = tf.matmul(inputs, self.w_query)
+            key = tf.matmul(inputs, self.w_key)
+            tanh_output = tf.nn.tanh(query + key)
+            score = tf.matmul(tanh_output, self.v, transpose_b=True)  # Perform transpose on self.v
+            attention_weights = tf.nn.softmax(score, axis=1)
+
+            # Weighted sum of inputs
+            weighted_inputs = inputs * attention_weights
+            output = tf.reduce_sum(weighted_inputs, axis=1)
+
+            return output
+
+        def compute_output_shape(self, input_shape):
+            return (input_shape[0], input_shape[-1])
+
+    def gru_prepare_data(data, time_steps):
+        X, y = [], []
+        for i in range(len(data) - time_steps - future_steps):
+            X.append(data[i:(i + time_steps), 0])
+            y.append(data[i + time_steps: i + time_steps + future_steps, 0])
+        return np.array(X), np.array(y)
+
+    # 构建 LSTM 模型
+    model = Sequential()
+    model.add(LSTM(units=units, input_shape=(time_sequence_length, 1), return_sequences=True))
+    model.add(LSTM(units=units2))
+    model.add(AdditiveAttention(attention_units=attention_units))
+    model.add(Dense(units=future_steps))
+
+    X_train, y_train = gru_prepare_data(dataScaled[: trainDataLength], time_sequence_length)
+    X_train, y_train = np.array(X_train), np.array(y_train)
+    X_val, y_val = gru_prepare_data(dataScaled[trainDataLength: trainDataLength + validDataLength],
+                                    time_sequence_length)
+
+    learning_rate = 0.05
+    optimizer = Adam(learning_rate=learning_rate, clipvalue=1.0)  # 可以根据需要调整 clipvalue 的值
+    # 定义早停回调
+    early_stopping = EarlyStopping(monitor='val_loss', patience=early_stopping_times, restore_best_weights=True)
+    # 编译模型
+    model.compile(optimizer=optimizer, loss='mean_squared_error')
+    # 训练模型
+    model.fit(X_train, y_train, epochs=epochs, batch_size=batchSize, shuffle=False, validation_data=(X_val, y_val),
+              callbacks=[early_stopping])
+    predictData = []
+    for step in range(trainDataLength + validDataLength, testDataLength - future_steps, future_steps):
+        X = np.array([dataScaled[step - time_sequence_length: step, 0]])
+        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+        predictData.append(model.predict(X)[0][0])
+    return predictData
+
+
 # transformer
 def new_transformer(dataScaled):
     def gru_prepare_data(data, time_steps):
