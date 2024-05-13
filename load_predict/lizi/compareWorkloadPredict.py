@@ -968,6 +968,15 @@ if __name__ == "__main__":
     modelParameters = {"double_lstm": dataScaled}
     modelResults = {"double_lstm": []}
 
+
+    # modelNames = {"double_lstm_with_attention": []}
+    # modelParameters = {"double_lstm_with_attention": dataScaled}
+    # modelResults = {"double_lstm_with_attention": []}
+
+    # modelNames = {"double_lstm_with_mul_attention": []}
+    # modelParameters = {"double_lstm_with_mul_attention": dataScaled}
+    # modelResults = {"double_lstm_with_mul_attention": []}
+
     # modelNames = {"linearregression": []}
     # modelParameters = {"linearregression": dataScaled}
     # modelResults = {"linearregression": []}
@@ -1077,10 +1086,7 @@ if __name__ == "__main__":
                 units = c
                 for d in unitList:
                     units2 = d
-                    for key in modelNames.keys():
-                        modelNames[key] = getattr(current_module, f"new_{key}")(modelParameters[key])
-                    print(f"数据集: {filePath}")
-                    print(f"开始训练：\nnepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}")
+                    # for key in modelNames.keys():
                     for key in modelNames.keys():
                         # 判断文件是否存在
                         # 判断csv文件中是否有相同key, epochs, batchSize, units, units2的行
@@ -1095,6 +1101,9 @@ if __name__ == "__main__":
                                         flag = 1
                                         break
                         if flag == 0:
+                            print(f"数据集: {filePath}")
+                            print(f"开始训练：\nepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}")
+                            modelNames[key] = getattr(current_module, f"new_{key}")(modelParameters[key])
                             modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
                             # 将结果添加到 DataFrame 中
                             rmse, mse, mae, ar2 = modelResults[key]
