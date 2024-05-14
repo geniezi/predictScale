@@ -20,6 +20,13 @@ def get_replica(requests, response):
     replicas = -(requests * (b / math.log((response - c) / a)))
     return (replicas)
 
+def get_requests(replicas):
+    a = 300
+    b = -0.00002632
+    c = 0
+    response=500
+    requests = replicas/(-b) * math.log((response - c) / a)
+    return math.floor(requests)
 
 def get_cost(replicas):
     CORE_NUM = 2
@@ -53,7 +60,7 @@ def half_provision(data):
     for i in range(len(data)):
         response = get_response_time(data['requests'][i], half_replicas)
         if response > 500:
-            slo_requests += data['requests'][i]
+            slo_requests += data['requests'][i] - get_requests(half_replicas)
             slo_time += 1
 
     scale_time = 0
@@ -70,7 +77,7 @@ def provision_95ile(data):
     for i in range(len(data)):
         response = get_response_time(data['requests'][i], replicas_95ile)
         if response > 500:
-            slo_requests += data['requests'][i]
+            slo_requests += data['requests'][i] - get_requests(replicas_95ile)
             slo_time += 1
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
@@ -86,7 +93,7 @@ def provision_99ile(data):
     for i in range(len(data)):
         response = get_response_time(data['requests'][i], replicas_99ile)
         if response > 500:
-            slo_requests += data['requests'][i]
+            slo_requests += data['requests'][i] - get_requests(replicas_99ile)
             slo_time += 1
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
@@ -101,7 +108,7 @@ def average_provision(data):
     for i in range(len(data)):
         response = get_response_time(data['requests'][i], replicas)
         if response > 500:
-            slo_requests += data['requests'][i]
+            slo_requests += data['requests'][i] - get_requests(replicas)
             slo_time += 1
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
@@ -133,6 +140,37 @@ def reactive(data):
 
 
 
+
+def hpa(data):
+    # current_replica=last_minute_replica * response/500
+    data = data.copy()
+    replicas = 1
+    cost = 0
+    slo_requests, slo_time = 0, 0
+    scale_time = 0
+    for i in range(1, len(data)):
+        response = get_response_time(data['requests'][i], replicas)
+        cost_by_second = get_cost(replicas)
+        cost += cost_by_second
+        if response > 500:
+            slo_requests += data['requests'][i]-get_requests(replicas)
+            slo_time += 1
+            scale_time += 1
+        replicas_new=math.ceil(replicas * response/ 500)
+        if replicas_new>1:
+            if replicas_new!=replicas:
+                scale_time+=1
+                replicas=replicas_new
+    return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
+
+def my_strategy(data):
+    data = data.copy()
+    replicas = 1
+    cost = 0
+    slo_requests, slo_time = 0, 0
+    scale_time = 0
+
+
 if __name__ == "__main__":
     current_module = importlib.import_module('__main__')
     df = pd.read_csv('burst.csv')
@@ -143,6 +181,7 @@ if __name__ == "__main__":
         'provision_99ile': [],
         'average_provision': [],
         'reactive': [],
+        'hpa': [],
     }
     for def_name in result.keys():
         result[def_name] = getattr(current_module, def_name)(df)
