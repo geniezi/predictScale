@@ -342,7 +342,7 @@ def new_double_lstm_with_attention(dataScaled):
     # 构建 LSTM 模型
     model = Sequential()
     model.add(LSTM(units=units, input_shape=(time_sequence_length, 1), return_sequences=True))
-    model.add(LSTM(units=units2,return_sequences=True))
+    model.add(LSTM(units=units2, return_sequences=True))
     model.add(AdditiveAttention(attention_units=attention_units))
     model.add(Dense(units=future_steps))
 
