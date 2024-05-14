@@ -1,7 +1,10 @@
 import importlib
 import math
+import queue
 
 import pandas as pd
+
+time_sequence_length = 10
 
 
 def get_response_time(requests, replicas):
@@ -20,13 +23,15 @@ def get_replica(requests, response):
     replicas = -(requests * (b / math.log((response - c) / a)))
     return (replicas)
 
+
 def get_requests(replicas):
     a = 300
     b = -0.00002632
     c = 0
-    response=500
-    requests = replicas/(-b) * math.log((response - c) / a)
+    response = 500
+    requests = replicas / (-b) * math.log((response - c) / a)
     return math.floor(requests)
+
 
 def get_cost(replicas):
     CORE_NUM = 2
@@ -66,8 +71,9 @@ def half_provision(data):
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
 
+
 def provision_95ile(data):
-    data= data.copy()
+    data = data.copy()
     requests_95ile = data['requests'].quantile(0.95)
     replicas_95ile = math.ceil(get_replica(requests_95ile, 500))
     print(replicas_95ile)
@@ -82,8 +88,9 @@ def provision_95ile(data):
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
 
+
 def provision_99ile(data):
-    data= data.copy()
+    data = data.copy()
     requests_99ile = data['requests'].quantile(0.99)
     replicas_99ile = math.ceil(get_replica(requests_99ile, 500))
     print(replicas_99ile)
@@ -97,6 +104,7 @@ def provision_99ile(data):
             slo_time += 1
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
+
 
 def average_provision(data):
     data = data.copy()
@@ -113,10 +121,11 @@ def average_provision(data):
     scale_time = 0
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
 
+
 def reactive(data):
     data = data.copy()
     replicas = 1
-    cost=0
+    cost = 0
     slo_requests, slo_time = 0, 0
     slo_satisfied = 0
     scale_time = 0
@@ -137,8 +146,7 @@ def reactive(data):
                 replicas -= 1
                 scale_time += 1
             slo_satisfied = 0
-
-
+    return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
 
 
 def hpa(data):
@@ -153,15 +161,15 @@ def hpa(data):
         cost_by_second = get_cost(replicas)
         cost += cost_by_second
         if response > 500:
-            slo_requests += data['requests'][i]-get_requests(replicas)
+            slo_requests += data['requests'][i] - get_requests(replicas)
             slo_time += 1
-            scale_time += 1
-        replicas_new=math.ceil(replicas * response/ 500)
-        if replicas_new>1:
-            if replicas_new!=replicas:
-                scale_time+=1
-                replicas=replicas_new
+        replicas_new = math.ceil(replicas * response / 500)
+        if replicas_new > 1:
+            if replicas_new != replicas:
+                scale_time += 1
+                replicas = replicas_new
     return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
+
 
 def my_strategy(data):
     data = data.copy()
@@ -169,7 +177,86 @@ def my_strategy(data):
     cost = 0
     slo_requests, slo_time = 0, 0
     scale_time = 0
+    history_replicas = queue.Queue(10)
+    last_burst=0
+    for i in range(time_sequence_length):
+        history_replicas.put(replicas)
+        # 先使用hpa
+        response = get_response_time(data['requests'][i], replicas)
+        cost_by_second = get_cost(replicas)
+        cost += cost_by_second
+        if response > 500:
+            slo_requests += data['requests'][i] - get_requests(replicas)
+            slo_time += 1
+        if i != time_sequence_length - 1:
+            replicas_new = math.ceil(replicas * response / 500)
+            if replicas_new > 1:
+                if replicas_new != replicas:
+                    scale_time += 1
+                    replicas = replicas_new
 
+    for i in range(time_sequence_length, len(data)):
+        # predict = data['predict'][i]
+        burst = data['burst'][i]
+        if burst :
+            # 有突发请求，使用历史记录中最大
+            replicas_new = max(history_replicas.queue)
+            if replicas_new != replicas:
+                scale_time += 1
+                replicas = replicas_new
+            last_burst = 1
+        else:
+            # 没有突发请求，使用预测值
+            replicas_new = data['replicas'][i]
+            if replicas_new != replicas:
+                scale_time += 1
+                replicas = replicas_new
+            last_burst = 0
+        history_replicas.get()
+        history_replicas.put(replicas)
+        print(history_replicas.queue)
+        response = get_response_time(data['requests'][i], replicas)
+        cost_by_second = get_cost(replicas)
+        cost += cost_by_second
+        if response > 500:
+            slo_requests += data['requests'][i] - get_requests(replicas)
+            slo_time += 1
+    return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
+
+
+def my_strategy_without_burst(data):
+    data = data.copy()
+    replicas = 1
+    cost = 0
+    slo_requests, slo_time = 0, 0
+    scale_time = 0
+    for i in range(time_sequence_length):
+        # 先使用hpa
+        response = get_response_time(data['requests'][i], replicas)
+        cost_by_second = get_cost(replicas)
+        cost += cost_by_second
+        if response > 500:
+            slo_requests += data['requests'][i] - get_requests(replicas)
+            slo_time += 1
+        if i != time_sequence_length - 1:
+            replicas_new = math.ceil(replicas * response / 500)
+            if replicas_new > 1:
+                if replicas_new != replicas:
+                    scale_time += 1
+                    replicas = replicas_new
+
+    for i in range(time_sequence_length, len(data)):
+        replicas_new = data['replicas'][i]
+        if replicas_new != replicas:
+            scale_time += 1
+            replicas = replicas_new
+        response = get_response_time(data['requests'][i], replicas)
+        cost_by_second = get_cost(replicas)
+        cost += cost_by_second
+        if response > 500:
+            slo_requests += data['requests'][i] - get_requests(replicas)
+            slo_time += 1
+    return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
 
 if __name__ == "__main__":
     current_module = importlib.import_module('__main__')
@@ -182,6 +269,8 @@ if __name__ == "__main__":
         'average_provision': [],
         'reactive': [],
         'hpa': [],
+        'my_strategy': [],
+        'my_strategy_without_burst': [],
     }
     for def_name in result.keys():
         result[def_name] = getattr(current_module, def_name)(df)
@@ -196,8 +285,7 @@ if __name__ == "__main__":
         data_to_save.append(data_row)
 
     # 构造DataFrame，指定列名
-    df_to_save = pd.DataFrame(data_to_save, columns=['stragety', 'cost', 'slo_requests','slo_time', 'scale_time'])
+    df_to_save = pd.DataFrame(data_to_save, columns=['stragety', 'cost', 'slo_requests', 'slo_time', 'scale_time'])
 
     # 保存DataFrame到CSV文件
     df_to_save.to_csv('scale.csv', index=False)  # index=False表示不保存行索引到CSV文件
-
