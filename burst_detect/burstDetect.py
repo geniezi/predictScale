@@ -2,10 +2,11 @@ import matplotlib.pyplot as plt
 import pandas as pd
 
 
+time_sequence_length = 10
+
 def draw(data, text):
     """
     按照时间绘制数据，突发点为红色
-    :param data1: 数据
     """
     data1=data.copy()
 
@@ -35,30 +36,36 @@ def variate(data, window_size):
     data1=data.copy()
     # 计算每秒请求的变化值，即每秒请求量减去前一秒请求量的绝对值
     data1['variate'] = data1['predict'].diff().abs()
-    data1['variate'].iloc[10]=abs(data1['variate'].iloc[10]-data1['requests'].iloc[9])
+    for i in range(time_sequence_length):
+        if i==0:
+            data1.loc[data1.index[i], 'variate'] = 0
+        else:
+            data1.loc[data1.index[i], 'variate']=abs(data1['predict'].iloc[i]-data1['requests'].iloc[i-1])
+
     # 计算滑动窗内变化值的平均值
-    avg = data1['variate'].rolling(window=window_size).mean()
-    # avg=data['variate'].mean()
+    # avg = data1['variate'].rolling(window=window_size).mean()
+    avg=data1['variate'].mean()
 
     # 计算变化值的标准差
-    std = data1['variate'].rolling(window=window_size).std()
-    # std = data['variate'].std()
+    # std = data1['variate'].rolling(window=window_size).std()
+    std = data1['variate'].std()
     # 计算变化值的阈值
-    # threshold = [avg - 2 * std, avg + 2 * std]
-    threshold = []
-    for i in range(len(data1)):
-        if i < window_size:
-            threshold.append([0,0])
-        else:
-            threshold.append([avg.iloc[i] - 3 * std.iloc[i], avg.iloc[i] + 3 * std.iloc[i]])
+    threshold = [avg - 3 * std, avg + 3 * std]
+    # threshold = []
+    # for i in range(len(data1)):
+    #     if i < window_size:
+    #         threshold.append([0,0])
+    #     else:
+    #         threshold.append([avg.iloc[i] - 3 * std.iloc[i], avg.iloc[i] + 3 * std.iloc[i]])
+
     # 判断是否为突发点
     burst = []
     for i in range(len(data1)):
         if i < window_size:
             burst.append(0)
         else:
-            # if data['variate'].iloc[i] > threshold[1] or data['variate'].iloc[i] < threshold[0]:
-            if data1['variate'].iloc[i] > threshold[i][1] or data1['variate'].iloc[i] < threshold[i][0]:
+            if data1['variate'].iloc[i] > threshold[1] or data1['variate'].iloc[i] < threshold[0]:
+            # if data1['variate'].iloc[i] > threshold[i][1] or data1['variate'].iloc[i] < threshold[i][0]:
                 burst.append(1)
             else:
                 burst.append(0)

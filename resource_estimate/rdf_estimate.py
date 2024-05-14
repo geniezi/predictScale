@@ -30,9 +30,9 @@ def get_resource_estimators(file_path):
     X_test = df.copy()
     X_test['delay'] = 500
     # 保留requests_scale和delay列
-    X_test = X_test[['requests', 'delay']]
+    X_test = X_test[['predict', 'delay']]
     # # 重命名列名
-    # X_test.rename(columns={'requests_scale': 'requests'}, inplace=True)
+    X_test.rename(columns={'predict': 'requests'}, inplace=True)
 
     # 使用加载的模型进行预测
     y_pred_loaded = rf_model_loaded.predict(X_test)
