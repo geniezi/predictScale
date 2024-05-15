@@ -31,7 +31,8 @@ testDataLength = totalLength
 # 特征数量
 features = 1
 # 训练次数
-epochs = 3500
+epochs = 3501
+epochs_to_save = [500, 1000, 1500, 2000, 2500, 3000, 3500]
 # 批处理大小
 batchSize = 1024
 # 神经单元
@@ -46,7 +47,7 @@ time_sequence_length = 10
 # 残差长度
 residualLength = 100
 # 早停次数
-early_stopping_times = 3500
+early_stopping_times = epochs
 # 定义L2正则化的参数
 l2_regularization = 0.01  # 调整正则化强度的参数
 filePath = "世界杯数据集Day46.xlsx"
@@ -330,7 +331,7 @@ def new_double_lstm_with_attention(dataScaled):
                         csv_write = csv.writer(f)
                         csv_write.writerow(
                             ["double_lstm_with_attention", epoch, self.batchSize, self.units, self.units2,
-                             self.attention_units, rmse, mse, mae, ar2])
+                             self.attention_units, mse, rmse, mae, ar2])
 
     def gru_prepare_data(data, time_steps):
         X, y = [], []
@@ -358,17 +359,16 @@ def new_double_lstm_with_attention(dataScaled):
     # 编译模型
     model.compile(optimizer=optimizer, loss='mean_squared_error')
 
-    epochs_to_save = [500, 1000, 1500, 2000, 2500, 3000, 3500]
     checkpoint_callback = ModelCheckpointAtEpoch(dataScaled, time_sequence_length, future_steps, epochs_to_save,
                                                  batchSize, units, units2, attention_units)
     # 训练模型
     model.fit(X_train, y_train, epochs=epochs, batch_size=batchSize, shuffle=False, validation_data=(X_val, y_val),
               callbacks=[early_stopping, checkpoint_callback])
     predictData = []
-    for step in range(trainDataLength + validDataLength, testDataLength - future_steps, future_steps):
-        X = np.array([dataScaled[step - time_sequence_length: step, 0]])
-        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
-        predictData.append(model.predict(X)[0][0])
+    # for step in range(trainDataLength + validDataLength, testDataLength - future_steps, future_steps):
+    #     X = np.array([dataScaled[step - time_sequence_length: step, 0]])
+    #     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+    #     predictData.append(model.predict(X)[0][0])
     return predictData
 
 
