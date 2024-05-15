@@ -31,7 +31,7 @@ testDataLength = totalLength
 # 特征数量
 features = 1
 # 训练次数
-epochs = 1500
+epochs = 3500
 # 批处理大小
 batchSize = 1024
 # 神经单元
@@ -46,7 +46,7 @@ time_sequence_length = 10
 # 残差长度
 residualLength = 100
 # 早停次数
-early_stopping_times = epochs
+early_stopping_times = 3500
 # 定义L2正则化的参数
 l2_regularization = 0.01  # 调整正则化强度的参数
 filePath = "世界杯数据集Day46.xlsx"
@@ -308,8 +308,8 @@ def new_double_lstm_with_attention(dataScaled):
                     with open(excel_file, 'r') as f:
                         reader = csv.reader(f)
                         for row in reader:
-                            if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
-                                    row[3]) == units and int(row[4]) == units2 and int(row[5]) == attention_units:
+                            if row[0] == key and int(row[1]) == epoch and int(row[2]) == self.batchSize and int(
+                                    row[3]) == self.units and int(row[4]) == self.units2 and int(row[5]) == self.attention_units:
                                 flag = 1
                                 break
                 if flag == 0:
@@ -1127,7 +1127,7 @@ if __name__ == "__main__":
     unitList = [4, 8, 16, 32, 64]
     # results_df = []
     # for a in epochList:
-    epochs = epochs
+    # epochs = epochs
     for b in batchList:
         batchSize = b
         for c in unitList:
@@ -1147,8 +1147,7 @@ if __name__ == "__main__":
                                 reader = csv.reader(f)
                                 for row in reader:
                                     if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
-                                            row[3]) == units and int(row[4]) == units2 and int(
-                                        row[5]) == attention_units:
+                                            row[3]) == units and int(row[4]) == units2 and int(row[5]) == attention_units:
                                         flag = 1
                                         break
                         if flag == 0:
@@ -1156,13 +1155,13 @@ if __name__ == "__main__":
                             print(
                                 f"开始训练：\nepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}, attention_units: {attention_units}")
                             modelNames[key] = getattr(current_module, f"new_{key}")(modelParameters[key])
-                            # modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
-                            # # 将结果添加到 DataFrame 中
-                            # rmse, mse, mae, ar2 = modelResults[key]
-                            # # 直接写入 csv 文件
-                            # with open(excel_file, 'a', newline='') as f:
-                            #     csv_write = csv.writer(f)
-                            #     csv_write.writerow([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
+                            modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
+                            # 将结果添加到 DataFrame 中
+                            rmse, mse, mae, ar2 = modelResults[key]
+                            # 直接写入 csv 文件
+                            with open(excel_file, 'a', newline='') as f:
+                                csv_write = csv.writer(f)
+                                csv_write.writerow([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
 
                             # results_df.append([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
 
