@@ -63,7 +63,40 @@ def window_average(data, window_size):
     draw(data, 'window:{}'.format(window_size))
 
 
-def variate(data, window_size):
+def variate(data):
+    # 计算每秒请求的变化值，即每秒请求量减去前一秒请求量的绝对值
+    data['variate'] = data['requests_scale'].diff().abs()
+    # 计算滑动窗内变化值的平均值
+    # avg = data['variate'].rolling(window=window_size).mean()
+    avg=data['variate'].mean()
+
+    # 计算变化值的标准差
+    # std = data['variate'].rolling(window=window_size).std()
+    std = data['variate'].std()
+    # 计算变化值的阈值
+    threshold = [avg - 3 * std, avg + 3 * std]
+    # threshold = []
+    # for i in range(len(data)):
+    #     if i < window_size:
+    #         threshold.append([0, 0])
+    #     else:
+    #         threshold.append([avg.iloc[i] - 3 * std.iloc[i], avg.iloc[i] + 3 * std.iloc[i]])
+    # 判断是否为突发点
+    burst = []
+    for i in range(len(data)):
+        if i == 0:
+            burst.append(0)
+        else:
+            if data['variate'].iloc[i] > threshold[1] or data['variate'].iloc[i] < threshold[0]:
+            # if data['variate'].iloc[i] > threshold[i][1] or data['variate'].iloc[i] < threshold[i][0]:
+                burst.append(1)
+            else:
+                burst.append(0)
+    data['burst'] = burst
+    draw(data, 'variate')
+
+
+def my_method(data, window_size):
     # 计算每秒请求的变化值，即每秒请求量减去前一秒请求量的绝对值
     data['variate'] = data['requests_scale'].diff().abs()
     # 计算滑动窗内变化值的平均值
@@ -95,55 +128,32 @@ def variate(data, window_size):
     data['burst'] = burst
     draw(data, 'variate')
 
-
-def fft(data):
-    # 设置突发的阈值，这个阈值需要根据实际情况进行调整
-    BURST_THRESHOLD = 1.5
-
-    # 假设data是已经加载的DataFrame
-    # data = pd.read_csv('your_data.csv')
-    # 假设我们只对'requests'列进行操作
-    requests = data['requests'].values
-
-    # 计算自相关性
-    autocorr = correlate(requests, requests, mode='full')
-    # 找到自相关性最高的点（除了0延迟）
-    peaks = np.where(autocorr == np.max(autocorr[len(autocorr) // 2 + 1:-1]))[0][0]
-
-    # 确定重复模式的长度L
-    L = peaks - len(requests) + 1
-    L = peaks - len(requests) // 2
-    window_size = max(L, 1)
-
-    # 假设我们用简单的移动平均值作为预测模型
-    # 你可以使用你的AR模型或其他模型替换这里
-    window_size = L
-    moving_avg_prediction = np.convolve(requests, np.ones(window_size) / window_size, 'same')
-
-    # 计算残差，即真实值和预测值之间的差异
-    residuals = requests - moving_avg_prediction
-
-    # 突发检测
-    bursts = []
-    for i in range(len(requests)):
-        if abs(residuals[i]) > BURST_THRESHOLD * np.std(residuals):
-            bursts.append(1)  # 突发发生
+def average(data):
+    # 计算每秒请求的平均值
+    avg = data['requests_scale'].mean()
+    # 计算每秒请求的标准差
+    std = data['requests_scale'].std()
+    # 计算阈值
+    threshold = [avg - 3 * std, avg + 3 * std]
+    # 判断是否为突发点
+    burst = []
+    for i in range(len(data)):
+        if data['requests_scale'].iloc[i] > threshold[1] or data['requests_scale'].iloc[i] < threshold[0]:
+            burst.append(1)
         else:
-            bursts.append(0)  # 没有突发
-
-    # 将检测到的突发情况添加到原始的DataFrame中
-    data['burst'] = bursts
-
-    # 输出含有突发检测结果的DataFrame
-    draw(data, 'fft')
+            burst.append(0)
+    data['burst'] = burst
+    draw(data, 'average')
 
 
 def main():
     data = osUtil.read_data('pageviews_by_minute.tsv')
     # 复制数据
     # for i in range(1, 15):
-    #     window_average(data.copy(), i*10)
-    variate(data.copy(), 13)
+    average(data.copy())
+    window_average(data.copy(), 30)
+    variate(data.copy())
+    my_method(data.copy(), 13)
     # fft(data.copy())
 
 
