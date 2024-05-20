@@ -1,3 +1,4 @@
+import argparse
 import csv
 import importlib
 import math
@@ -32,6 +33,7 @@ testDataLength = totalLength
 features = 1
 # 训练次数
 epochs = 3501
+# epochs_to_save = [500, 1000, 1500, 2000, 2500, 3000, 3500]
 epochs_to_save = [500, 1000, 1500, 2000, 2500, 3000, 3500]
 # 批处理大小
 batchSize = 1024
@@ -50,12 +52,12 @@ residualLength = 100
 early_stopping_times = epochs
 # 定义L2正则化的参数
 l2_regularization = 0.01  # 调整正则化强度的参数
-filePath = "世界杯数据集Day46.xlsx"
+# filePath = "世界杯数据集Day46.xlsx"
 
 
 # filePath = "维基百科数据集桌面端原始版.xlsx"
 # filePath = "维基百科数据集桌面端缩放版.xlsx"
-# filePath = "维基百科.xlsx"
+filePath = "维基百科.xlsx"
 
 def rmse_and_mse_mae_compute(actualData, predictData, modelName):
     print(f"{modelName}:")
@@ -232,10 +234,10 @@ def new_double_lstm(dataScaled):
     model.fit(X_train, y_train, epochs=epochs, batch_size=batchSize, shuffle=False, validation_data=(X_val, y_val),
               callbacks=[early_stopping])
     predictData = []
-    for step in range(trainDataLength + validDataLength, testDataLength - future_steps, future_steps):
-        X = np.array([dataScaled[step - time_sequence_length: step, 0]])
-        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
-        predictData.append(model.predict(X)[0][0])
+    # for step in range(trainDataLength + validDataLength, testDataLength - future_steps, future_steps):
+    #     X = np.array([dataScaled[step - time_sequence_length: step, 0]])
+    #     X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+    #     predictData.append(model.predict(X)[0][0])
     return predictData
 
 
@@ -331,7 +333,7 @@ def new_double_lstm_with_attention(dataScaled):
                         csv_write = csv.writer(f)
                         csv_write.writerow(
                             ["double_lstm_with_attention", epoch, self.batchSize, self.units, self.units2,
-                             self.attention_units, mse, rmse, mae, ar2])
+                             self.attention_units, future_steps, time_sequence_length, mse, rmse, mae, ar2])
 
     def gru_prepare_data(data, time_steps):
         X, y = [], []
@@ -888,8 +890,28 @@ def new_my_gru(dataScaled):
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--batch_size", type=int, default=512)
+    parser.add_argument("--units1", type=int, default=64)
+    parser.add_argument("--units2", type=int, default=64)
+    parser.add_argument("--attention_units", type=int, default=1)
+    parser.add_argument("--future_steps", type=int, default=1)
+    parser.add_argument("--input_steps", type=int, default=10)
+    # 解析parser
+    args = parser.parse_args()
+    # 从parser中获取参数
+    BATCH_SIZE = args.batch_size
+    UNITS1 = args.units1
+    UNITS2 = args.units2
+    ATTENTION_UNITS = args.attention_units
+    FUTURE_STEPS = args.future_steps
+    INPUT_STEPS = args.input_steps
+    future_steps = FUTURE_STEPS
+    time_sequence_length = INPUT_STEPS
+
     # 获取当前模块的名称
     current_module = importlib.import_module('__main__')
+
     # 数据处理
     np.random.seed(42)
     tf.random.set_seed(42)
@@ -1113,12 +1135,15 @@ if __name__ == "__main__":
     # print('best MSE:', np.min(mse_list))
 
     # 网格搜索
-    excel_file = 'results.csv'
+    excel_file = 'results_wiki_att.csv'
     # csv文件头
+    # with open(excel_file, 'w', newline='') as f:
+    #     csv_write = csv.writer(f)
+    #     csv_write.writerow(['model', 'epochs', 'batchsize', 'units1', 'units2', 'units3', 'RMSE', 'MSE', 'MAE', 'AR2'])
     with open(excel_file, 'w', newline='') as f:
         csv_write = csv.writer(f)
-        csv_write.writerow(['model', 'epochs', 'batchsize', 'units1', 'units2', 'units3', 'MSE', 'RMSE', 'MAE', 'AR2'])
-    epochs = 3500
+        csv_write.writerow(['model', 'epochs', 'batchsize', 'units1', 'units2', 'units3', 'futurestep', 'inputstep', 'RMSE', 'MSE', 'MAE', 'AR2'])
+    # epochs = 3500
     # epochList = [500, 1000, 1500, 2000, 2500, 3000, 3500]
     # batchSize = 128
     batchList = [64, 128, 256, 512, 1024]
@@ -1128,16 +1153,16 @@ if __name__ == "__main__":
     # results_df = []
     # for a in epochList:
     # epochs = epochs
-    for b in batchList:
-        batchSize = b
-        for c in unitList:
-            units = c
-            for d in unitList:
-                units2 = d
-                for e in unitList:
-                    attention_units = e
+    # for b in batchList:
+    batchSize = BATCH_SIZE
+        # for c in unitList:
+    units = UNITS1
+    # for d in unitList:
+    units2 = UNITS2
+    # for e in unitList:
+    attention_units = ATTENTION_UNITS
                     # for key in modelNames.keys():
-                    for key in modelNames.keys():
+    for key in modelNames.keys():
                         # 判断文件是否存在
                         # 判断csv文件中是否有相同key, epochs, batchSize, units, units2的行
                         # 如果有则不写入
@@ -1146,7 +1171,7 @@ if __name__ == "__main__":
                             with open(excel_file, 'r') as f:
                                 reader = csv.reader(f)
                                 for row in reader:
-                                    if row[0] == key and int(row[1]) == epochs and int(row[2]) == batchSize and int(
+                                    if row[0] == key and int(row[1]) == epochs-1 and int(row[2]) == batchSize and int(
                                             row[3]) == units and int(row[4]) == units2 and int(row[5]) == attention_units:
                                         flag = 1
                                         break
@@ -1155,13 +1180,13 @@ if __name__ == "__main__":
                             print(
                                 f"开始训练：\nepochs: {epochs}, batchSize: {batchSize}, units: {units}, units2: {units2}, attention_units: {attention_units}")
                             modelNames[key] = getattr(current_module, f"new_{key}")(modelParameters[key])
-                            modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
-                            # 将结果添加到 DataFrame 中
-                            rmse, mse, mae, ar2 = modelResults[key]
-                            # 直接写入 csv 文件
-                            with open(excel_file, 'a', newline='') as f:
-                                csv_write = csv.writer(f)
-                                csv_write.writerow([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
+                            # modelResults[key] = rmse_and_mse_mae_compute(actualData, modelNames[key], key)
+                            # # 将结果添加到 DataFrame 中
+                            # rmse, mse, mae, ar2 = modelResults[key]
+                            # # 直接写入 csv 文件
+                            # with open(excel_file, 'a', newline='') as f:
+                            #     csv_write = csv.writer(f)
+                            #     csv_write.writerow([key, epochs, batchSize, units, units2, rmse, mse, mae, ar2])
 
                             # results_df.append([key, epochs, batchSize, units, units2, mse, rmse, mae, ar2])
 
