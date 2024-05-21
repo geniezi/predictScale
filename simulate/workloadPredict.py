@@ -18,7 +18,7 @@ future_steps = 1
 # 输入步长
 time_sequence_length = 10
 
-filePath = "世界杯数据集Day46.xlsx"
+filePath = "../load_predict/lizi/世界杯数据集Day46.xlsx"
 
 
 # filePath = "维基百科数据集桌面端原始版.xlsx"
