@@ -29,6 +29,12 @@ def get_resource_estimators(file_path):
     # 添加一列delay为500
     X_test = df.copy()
     X_test['delay'] = 500
+    # 对于前n行predict为0的列，填充requests值到predict列
+    for i in range(len(X_test)):
+        if X_test.loc[i, 'predict'] == 0:
+            X_test.loc[i, 'predict'] = X_test.loc[i, 'requests']
+        else:
+            break
     # 保留requests_scale和delay列
     X_test = X_test[['predict', 'delay']]
     # # 重命名列名
@@ -45,8 +51,8 @@ def get_resource_estimators(file_path):
     return df
 
 
-data=get_resource_estimators('fc/predict.csv')
+data=get_resource_estimators('wiki/predict.csv')
 # 保存
-data.to_csv('fc/estimate.csv', index=False)
+data.to_csv('wiki/estimate1.csv', index=False)
 
 # print(get_response_time(10000, 3))

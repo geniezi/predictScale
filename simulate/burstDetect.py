@@ -25,6 +25,9 @@ def draw(data, text):
     # 画突发点
     plt.scatter(bursts['minute'], bursts['predict'], color='red', label='Bursts',s=20)
 
+    # 设定y坐标为0以上
+    plt.ylim(0, max(data1['predict']) + 1000)
+
     # 设置注释
     plt.title(text)
 
@@ -32,55 +35,54 @@ def draw(data, text):
     plt.show()
 
 
-def variate(data, window_size):
-    data1=data.copy()
+def my_method(data, window_size):
     # 计算每秒请求的变化值，即每秒请求量减去前一秒请求量的绝对值
-    data1['variate'] = data1['predict'].diff().abs()
-    for i in range(time_sequence_length):
-        if i==0:
-            data1.loc[data1.index[i], 'variate'] = 0
-        else:
-            data1.loc[data1.index[i], 'variate']=abs(data1['predict'].iloc[i]-data1['requests'].iloc[i-1])
-
+    data['variate'] = data['predict'].diff().abs()
     # 计算滑动窗内变化值的平均值
-    # avg = data1['variate'].rolling(window=window_size).mean()
-    avg=data1['variate'].mean()
+    avg = data['variate'].rolling(window=window_size).mean()
+    # avg=data['variate'].mean()
 
     # 计算变化值的标准差
-    # std = data1['variate'].rolling(window=window_size).std()
-    std = data1['variate'].std()
-    # 计算变化值的阈值
-    threshold = [avg - 3 * std, avg + 3 * std]
-    # threshold = []
-    # for i in range(len(data1)):
-    #     if i < window_size:
-    #         threshold.append([0,0])
-    #     else:
-    #         threshold.append([avg.iloc[i] - 3 * std.iloc[i], avg.iloc[i] + 3 * std.iloc[i]])
+    std = data['variate'].rolling(window=window_size).std()
+    # std = data['variate'].std()
 
+
+    # 对于数据前长度不足滑动窗口的数据，取数据前所有数据的平均值、标准差
+    for i in range(window_size):
+        avg.iloc[i] = data['variate'].iloc[:i].mean()
+        std.iloc[i] = data['variate'].iloc[:i].std()
+
+    # 计算变化值的阈值
+    # threshold = [avg - 3 * std, avg + 3 * std]
+    threshold = []
+    for i in range(len(data)):
+        if i < window_size:
+            threshold.append([0, 0])
+        else:
+            threshold.append([avg.iloc[i] - 3 * std.iloc[i], avg.iloc[i] + 3 * std.iloc[i]])
     # 判断是否为突发点
     burst = []
-    for i in range(len(data1)):
-        if i < window_size:
+    for i in range(len(data)):
+        if i == 0:
             burst.append(0)
         else:
-            if data1['variate'].iloc[i] > threshold[1] or data1['variate'].iloc[i] < threshold[0]:
-            # if data1['variate'].iloc[i] > threshold[i][1] or data1['variate'].iloc[i] < threshold[i][0]:
+            # if data['variate'].iloc[i] > threshold[1] or data['variate'].iloc[i] < threshold[0]:
+            if data['variate'].iloc[i] > threshold[i][1] or data['variate'].iloc[i] < threshold[i][0]:
                 burst.append(1)
             else:
                 burst.append(0)
-    data1['burst'] = burst
-    draw(data1, 'variate')
-    data1.drop(['variate'], axis=1, inplace=True)
-    return data1
+    data['burst'] = burst
+    draw(data, 'my_method')
+    data.drop(['variate'], axis=1, inplace=True)
+    return data
 
 
-data = pd.read_csv('estimate.csv')
+data = pd.read_csv('fc/estimate1.csv')
 # 复制数据
 # for i in range(1, 15):
 #     window_average(data.copy(), i*10)
-data= variate(data.copy(), 60)
+data= my_method(data.copy(), 60)
 # fft(data.copy())
 
 # 保存data
-data.to_csv('burst.csv', index=False)
+data.to_csv('fc/burst1.csv', index=False)

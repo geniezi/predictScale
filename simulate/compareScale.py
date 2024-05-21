@@ -214,7 +214,7 @@ def my_strategy(data):
             last_burst = 0
         history_replicas.get()
         history_replicas.put(replicas)
-        print(history_replicas.queue)
+        # print(history_replicas.queue)
         response = get_response_time(data['requests'][i], replicas)
         cost_by_second = get_cost(replicas)
         cost += cost_by_second
@@ -260,7 +260,7 @@ def my_strategy_without_burst(data):
 
 if __name__ == "__main__":
     current_module = importlib.import_module('__main__')
-    df = pd.read_csv('burst.csv')
+    df = pd.read_csv('fc/burst.csv')
     result = {
         'over_provision': [],
         'half_provision': [],
@@ -288,4 +288,4 @@ if __name__ == "__main__":
     df_to_save = pd.DataFrame(data_to_save, columns=['stragety', 'cost', 'slo_requests', 'slo_time', 'scale_time'])
 
     # 保存DataFrame到CSV文件
-    df_to_save.to_csv('scale.csv', index=False)  # index=False表示不保存行索引到CSV文件
+    df_to_save.to_csv('fc/scale.csv', index=False)  # index=False表示不保存行索引到CSV文件
