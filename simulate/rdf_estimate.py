@@ -3,7 +3,7 @@ import math
 import pandas as pd
 from joblib import load
 
-modelPath = "SLOA/random_forest_model.joblib"
+modelPath = "random_forest_model.joblib"
 
 
 def get_response_time(requests, replicas):
@@ -45,8 +45,8 @@ def get_resource_estimators(file_path):
     return df
 
 
-data=get_resource_estimators('predict.csv')
+data=get_resource_estimators('fc/predict.csv')
 # 保存
-data.to_csv('estimate.csv', index=False)
+data.to_csv('fc/estimate.csv', index=False)
 
 # print(get_response_time(10000, 3))

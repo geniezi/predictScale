@@ -9,8 +9,8 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.optimizers import Adam
 
 # 神经单元
-units = 4
-units2 = 32
+units = 64
+units2 = 64
 # 修改注意力层的参数
 attention_units = 8  # 增加注意力权重的维度
 # 输出步长
@@ -88,7 +88,7 @@ def load_weight():
     optimizer = Adam(learning_rate=learning_rate, clipvalue=1.0)
     new_model.compile(optimizer=optimizer, loss='mean_squared_error')
     # 加载之前保存的权重
-    new_model.load_weights('model_weights.h5')
+    new_model.load_weights('./fc/fc_weights.h5')
     return new_model
 
 
@@ -124,5 +124,5 @@ df_all['predict'] = 0  # 创建一个新列填充了NaN
 df_all.loc[time_sequence_length:, 'predict'] = df1['predict'].values
 df_all['predict'] = df_all['predict'].astype(int)
 # 保存到csv
-df_all.to_csv('../predict.csv', index=False)
+df_all.to_csv('./fc/predict.csv', index=False)
 # print(df)
