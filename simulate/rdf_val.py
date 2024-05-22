@@ -9,7 +9,7 @@ def get_replica(requests, response):
     b = -0.00002632
     c = 0
     replicas = -(requests * (b / math.log((response - c) / a)))
-    return (replicas)
+    return replicas
 
 
 def get_response_time(requests, replicas):
@@ -24,14 +24,14 @@ def get_response_time(requests, replicas):
     response=math.floor(a * math.exp(-b * requests / replicas) + c)
     return response
 
-df=pd.read_csv('estimate.csv')
+df=pd.read_csv('wiki1/estimate.csv')
 df['response']=0
 df['replica_val']=0
 count=0
 count1=0
 for i in range(len(df)):
     df.loc[i,'response']=get_response_time(df['requests'][i],df['replicas'][i])
-    df.loc[i,'replica_val']=get_replica(df['requests'][i],df['response'][i])
+    df.loc[i,'replica_val']=get_replica(df['requests'][i],500)
     if df['response'][i]>500:
         count+=1
     if df['replicas'][i]!=df['replica_val'][i]:
@@ -43,4 +43,4 @@ print(count)
 print(count1)
 
 
-df.to_csv('estimate_val.csv',index=False)
+df.to_csv('wiki1/estimate_val.csv',index=False)

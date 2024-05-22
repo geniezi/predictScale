@@ -226,30 +226,80 @@ def my_strategy(data):
 
 def my_strategy_without_burst(data):
     data = data.copy()
-    replicas = 1
+   # replicas = 1
+    replicas = data['replicas'][0]
     cost = 0
     slo_requests, slo_time = 0, 0
     scale_time = 0
-    for i in range(time_sequence_length):
-        # 先使用hpa
+    # for i in range(time_sequence_length):
+    #     # 先使用hpa
+    #     response = get_response_time(data['requests'][i], replicas)
+    #     cost_by_second = get_cost(replicas)
+    #     cost += cost_by_second
+    #     if response > 500:
+    #         slo_requests += data['requests'][i] - get_requests(replicas)
+    #         slo_time += 1
+    #     if i != time_sequence_length - 1:
+    #         replicas_new = math.ceil(replicas * response / 500)
+    #         if replicas_new > 1:
+    #             if replicas_new != replicas:
+    #                 scale_time += 1
+    #                 replicas = replicas_new
+
+    for i in range(len(data)):
+    # for i in range(time_sequence_length, len(data)):
+        replicas_new = data['replicas'][i]
+        if replicas_new != replicas:
+            scale_time += 1
+            replicas = replicas_new
         response = get_response_time(data['requests'][i], replicas)
         cost_by_second = get_cost(replicas)
         cost += cost_by_second
         if response > 500:
             slo_requests += data['requests'][i] - get_requests(replicas)
             slo_time += 1
-        if i != time_sequence_length - 1:
-            replicas_new = math.ceil(replicas * response / 500)
-            if replicas_new > 1:
-                if replicas_new != replicas:
-                    scale_time += 1
-                    replicas = replicas_new
+    return cost, slo_requests / data['requests'].sum() * 100, slo_time / len(data) * 100, scale_time
 
-    for i in range(time_sequence_length, len(data)):
+def my_strategy_with_duration(data):
+    data = data.copy()
+    replicas = data['replicas'][0]
+    cost = 0
+    slo_requests, slo_time = 0, 0
+    scale_time = 0
+    flag=0
+    # for i in range(time_sequence_length):
+    #     # 先使用hpa
+    #     response = get_response_time(data['requests'][i], replicas)
+    #     cost_by_second = get_cost(replicas)
+    #     cost += cost_by_second
+    #     if response > 500:
+    #         slo_requests += data['requests'][i] - get_requests(replicas)
+    #         slo_time += 1
+    #     if i != time_sequence_length - 1:
+    #         replicas_new = math.ceil(replicas * response / 500)
+    #         if replicas_new > 1:
+    #             if replicas_new != replicas:
+    #                 scale_time += 1
+    #                 replicas = replicas_new
+
+    for i in range(len(data)):
+    # for i in range(time_sequence_length, len(data)):
         replicas_new = data['replicas'][i]
-        if replicas_new != replicas:
+        if replicas_new > replicas:
             scale_time += 1
             replicas = replicas_new
+            flag=0
+        elif replicas_new < replicas:
+            if flag==1:
+                scale_time += 1
+                replicas = replicas_new
+                flag=0
+            else:
+                flag=1
+
+        # if replicas_new != replicas:
+        #     scale_time += 1
+        #     replicas = replicas_new
         response = get_response_time(data['requests'][i], replicas)
         cost_by_second = get_cost(replicas)
         cost += cost_by_second
@@ -270,7 +320,8 @@ if __name__ == "__main__":
         'reactive': [],
         'hpa': [],
         'my_strategy_without_burst': [],
-        'my_strategy': [],
+        'my_strategy_with_duration': [],
+        # 'my_strategy': [],
     }
     for def_name in result.keys():
         result[def_name] = getattr(current_module, def_name)(df)
